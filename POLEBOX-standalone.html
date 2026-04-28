@@ -2434,74 +2434,158 @@ const ScreenOrderHistory = ({ onBack }) => {
   );
 };
 
-// ─── Modal detalle de pedido ──────────────────────────────────
+// ─── Modal detalle de pedido (ticket receipt style) ──────────
 const OrderTicket = ({ order, onClose, fmt, total, tone }) => {
+  const [downloading, setDownloading] = React.useState(false);
+  const [downloaded, setDownloaded] = React.useState(false);
   const o = order;
   const t = tone(o.state);
+
+  const handleDownload = () => {
+    if (downloading || downloaded) return;
+    setDownloading(true);
+    setTimeout(() => { setDownloading(false); setDownloaded(true); }, 1400);
+    setTimeout(() => setDownloaded(false), 2400);
+  };
+
+  // Precio bruto de artículos
+  const itemsTotal = o.items.reduce((s, it) => s + it.price * it.qty, 0);
+  const gross = itemsTotal + o.shipping;
+  const subtotalExVat = gross / 1.21;
+  const vat = gross - subtotalExVat;
+
   return (
-    <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(20,13,62,.5)', zIndex: 100, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', backdropFilter: 'blur(4px)' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: PB.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: '8px 20px 32px', maxHeight: '85%', overflowY: 'auto', boxShadow: '0 -20px 60px rgba(20,13,62,.2)' }}>
-        <div style={{ width: 44, height: 4, borderRadius: 999, background: PB.line, margin: '8px auto 20px' }}/>
-
-        {/* Cabecera */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-          <div>
-            <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, color: PB.morado }}>{o.id}</div>
-            <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', marginTop: 2 }}>Detalle del pedido</div>
-          </div>
-          <span style={{ padding: '4px 10px', borderRadius: 999, background: t.bg, color: t.fg, fontSize: 11, fontWeight: 800 }}>{t.label}</span>
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 80,
+      background: 'rgba(20,19,24,.55)', backdropFilter: 'blur(4px)',
+      display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+      animation: 'pb-fade 220ms ease-out',
+    }}>
+      <div onClick={onClose} style={{ flex: 1, cursor: 'pointer' }}/>
+      <div style={{
+        position: 'relative', maxHeight: '92%', overflowY: 'auto',
+        padding: '0 14px 14px', animation: 'pb-slideup 320ms cubic-bezier(.2,.7,.2,1)',
+      }}>
+        {/* Handle */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
+          <div style={{ width: 44, height: 5, borderRadius: 999, background: 'rgba(255,255,255,.6)' }}/>
         </div>
 
-        {/* Artículos */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 8 }}>Artículos</div>
-          {o.items.map((it, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: `1px solid ${PB.line}`, fontSize: 13, color: PB.ink2 }}>
-              <span>{it.name} ×{it.qty}</span>
-              <span style={{ fontFamily: PB.mono, fontWeight: 600 }}>{fmt(it.price * it.qty)}</span>
+        {/* Ticket */}
+        <div style={{ position: 'relative', filter: 'drop-shadow(0 18px 30px rgba(20,19,24,.25))' }}>
+          <TicketShape>
+            {/* Header morado */}
+            <div style={{
+              padding: '20px 22px 16px', background: PB.morado, color: '#fff',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+            }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', opacity: .75 }}>RECIBO</div>
+                <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 22, letterSpacing: '-.01em', marginTop: 4 }}>POLEBOX</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', opacity: .75 }}>Nº PEDIDO</div>
+                <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, marginTop: 4 }}>{o.id}</div>
+              </div>
             </div>
-          ))}
-          {o.shipping > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: `1px solid ${PB.line}`, fontSize: 13, color: PB.ink2 }}>
-              <span>Envío</span><span style={{ fontFamily: PB.mono, fontWeight: 600 }}>{fmt(o.shipping)}</span>
+
+            {/* Estado */}
+            <div style={{ padding: '14px 22px 4px' }}>
+              <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: 999, background: t.bg, color: t.fg, fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>{t.label}</span>
             </div>
-          )}
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: `1px solid ${PB.line}` }}>
-            <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15 }}>Total</span>
-            <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 18 }}>{fmt(total(o))}</span>
-          </div>
+
+            {/* Detalle de entrega */}
+            <div style={{ padding: '12px 22px 18px' }}>
+              <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, letterSpacing: '-.01em', margin: '0 0 4px' }}>
+                {o.delivery === 'locker' ? `Locker ${o.lockerId}` : 'Envío a domicilio'}
+              </h3>
+              <div style={{ fontSize: 13, color: PB.ink3 }}>
+                {o.delivery === 'locker' ? `POLEBOX ${o.venueName}` : o.addr}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }}>
+                <Detail label="Fecha" value={o.date}/>
+                <Detail label="Artículos" value={`${o.items.length} producto${o.items.length !== 1 ? 's' : ''}`}/>
+                <Detail label="Entrega" value={o.delivery === 'locker' ? 'Locker sede' : 'A domicilio'}/>
+                <Detail label="Pago" value={o.method}/>
+              </div>
+            </div>
+
+            <Perforation/>
+
+            {/* Concepto — items + desglose */}
+            <div style={{ padding: '16px 22px 8px' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 10 }}>Concepto</div>
+              {o.items.map((it, i) => (
+                <Line key={i} label={it.name} sub={`×${it.qty}`} value={fmt(it.price * it.qty)}/>
+              ))}
+              {o.shipping > 0 && <Line label="Envío" value={fmt(o.shipping)} dim/>}
+              <Line label="Subtotal (sin IVA)" value={fmt(subtotalExVat)} dim/>
+              <Line label="IVA (21 %)" value={fmt(vat)} dim/>
+              <div style={{ height: 1, background: PB.line, margin: '10px 0' }}/>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 16 }}>Total</span>
+                <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 22, color: PB.ink, letterSpacing: '-.01em' }}>{fmt(total(o))}</span>
+              </div>
+              <div style={{ marginTop: 10, fontSize: 12, color: PB.ink3, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon name="card" size={14} color={PB.ink3}/> Pagado con {o.method}
+              </div>
+            </div>
+
+            <Perforation/>
+
+            {/* Código locker o seguimiento */}
+            <div style={{ padding: '18px 22px 22px', display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div style={{
+                width: 72, height: 72, borderRadius: 14,
+                background: o.delivery === 'locker' ? PB.mentaSoft : PB.surface2,
+                border: `1px solid ${PB.line}`,
+                display: 'grid', placeItems: 'center', flexShrink: 0,
+              }}>
+                <Icon name={o.delivery === 'locker' ? 'bolt' : 'refresh'} size={30} color={PB.morado}/>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {o.delivery === 'locker' ? (<>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Código de apertura</div>
+                  <div style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 28, color: PB.morado, letterSpacing: '.18em', marginTop: 4 }}>{o.lockerCode}</div>
+                  <div style={{ fontFamily: PB.mono, fontSize: 10, color: PB.ink3, marginTop: 4 }}>Válido 48 h · {o.id}</div>
+                </>) : (<>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Nº de seguimiento</div>
+                  <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 15, color: PB.morado, letterSpacing: '.06em', marginTop: 4, wordBreak: 'break-all' }}>{o.tracking}</div>
+                  <div style={{ fontSize: 11, color: PB.ink3, marginTop: 4 }}>Correos Express · {o.id}</div>
+                </>)}
+              </div>
+            </div>
+          </TicketShape>
         </div>
 
-        {/* Entrega */}
-        <div style={{ padding: '14px', borderRadius: 16, background: o.delivery === 'locker' ? PB.mentaSoft : PB.warnBg, marginBottom: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <Icon name={o.delivery === 'locker' ? 'bolt' : 'refresh'} size={16} color={PB.morado}/>
-            <span style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>
-              {o.delivery === 'locker' ? `Locker ${o.lockerId} · POLEBOX ${o.venueName}` : `Envío a domicilio · ${o.addr}`}
-            </span>
-          </div>
-          {o.delivery === 'locker' ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, color: PB.ink3 }}>Código de apertura:</span>
-              <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 20, color: PB.morado, letterSpacing: '.12em' }}>{o.lockerCode}</span>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, color: PB.ink3 }}>Seguimiento:</span>
-              <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, color: PB.morado }}>{o.tracking}</span>
-            </div>
-          )}
+        {/* Acciones */}
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button onClick={handleDownload} disabled={downloading} style={{
+            width: '100%', padding: '16px', borderRadius: 14, border: 0,
+            background: downloaded ? PB.success : PB.ink, color: '#fff',
+            fontFamily: PB.font, fontWeight: 700, fontSize: 15, letterSpacing: '-.005em',
+            cursor: downloading ? 'wait' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            transition: 'all 220ms cubic-bezier(.2,.7,.2,1)',
+            boxShadow: '0 6px 18px rgba(20,19,24,.25)',
+          }}>
+            {downloading ? (<>
+              <span style={{ width: 16, height: 16, borderRadius: 999, border: '2px solid rgba(255,255,255,.35)', borderTopColor: '#fff', animation: 'pb-spin 700ms linear infinite' }}/>
+              Generando PDF…
+            </>) : downloaded ? (<>
+              <Icon name="check" size={18} color="#fff"/>
+              Factura guardada
+            </>) : (<>
+              <Icon name="doc" size={18} color="#fff"/>
+              Descargar factura
+            </>)}
+          </button>
+          <button onClick={onClose} style={{
+            width: '100%', padding: '12px', borderRadius: 14, border: 0,
+            background: 'transparent', color: '#fff',
+            fontFamily: PB.font, fontWeight: 700, fontSize: 14, cursor: 'pointer',
+          }}>Cerrar</button>
         </div>
-
-        {/* Pago */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: PB.surface2, marginBottom: 14, fontSize: 13 }}>
-          <span style={{ color: PB.ink3 }}>Método de pago</span>
-          <span style={{ fontFamily: PB.font, fontWeight: 700, color: PB.ink }}>{o.method}</span>
-        </div>
-
-        <button onClick={onClose} style={{ width: '100%', padding: '14px', borderRadius: 14, border: `1px solid ${PB.line}`, background: PB.surface, fontFamily: PB.font, fontWeight: 700, fontSize: 15, color: PB.ink, cursor: 'pointer' }}>
-          Cerrar
-        </button>
       </div>
     </div>
   );

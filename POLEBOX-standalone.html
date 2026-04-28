@@ -2939,73 +2939,66 @@ window.AuthWall = AuthWall;
 
 </script>
 <script type="text/babel">
-// POLEBOX — Tienda: productos para recoger en el pasillo de la sede
+// POLEBOX — Tienda: catálogo de productos
 
-const ScreenStore = ({ onBack }) => {
+const STORE_PRODUCTS = [
+  { id: 1, cat: 'grip',       name: 'Magnesio líquido',  sub: 'Mighty Grip · 50 ml',    price: 8.50,  icon: 'bolt',    color: '#F5F2EC', badge: 'Más vendido' },
+  { id: 2, cat: 'grip',       name: 'Tiza en polvo',     sub: 'Chalk Block · 56 g',     price: 5.00,  icon: 'sparkle', color: '#F5F2EC' },
+  { id: 3, cat: 'grip',       name: 'Dry Hands',         sub: 'Grip líquido · 45 ml',   price: 12.00, icon: 'bolt',    color: '#F5F2EC' },
+  { id: 4, cat: 'accesorios', name: 'Rodilleras pole',   sub: 'ProGrip · el par',       price: 18.00, icon: 'shield',  color: '#ECE4F9', badge: 'Nuevo' },
+  { id: 5, cat: 'accesorios', name: 'Calcetines grip',   sub: 'Non-slip · talla única', price: 9.00,  icon: 'users',   color: '#ECE4F9' },
+  { id: 6, cat: 'accesorios', name: 'Toalla microfibra', sub: '40×80 cm · POLEBOX',     price: 12.00, icon: 'refresh', color: '#ECE4F9' },
+  { id: 7, cat: 'ropa',       name: 'Shorts pole',       sub: 'POLEBOX · XS–XL',        price: 28.00, icon: 'profile', color: '#C6F2DD' },
+  { id: 8, cat: 'ropa',       name: 'Top sin tirantes',  sub: 'POLEBOX · XS–XL',        price: 24.00, icon: 'profile', color: '#C6F2DD' },
+];
+window.STORE_PRODUCTS = STORE_PRODUCTS;
+
+const ScreenStore = ({ onBack, onCart, cart, setCart }) => {
   const [cat, setCat] = React.useState('todo');
-  const [cart, setCart] = React.useState({});
 
   const categories = [
-    { id: 'todo',       label: 'Todo' },
-    { id: 'grip',       label: 'Grip' },
+    { id: 'todo', label: 'Todo' },
+    { id: 'grip', label: 'Grip' },
     { id: 'accesorios', label: 'Accesorios' },
-    { id: 'ropa',       label: 'Ropa' },
+    { id: 'ropa', label: 'Ropa' },
   ];
 
-  const products = [
-    { id: 1, cat: 'grip',       name: 'Magnesio líquido',  sub: 'Mighty Grip · 50 ml',    price: 8.50,  icon: 'bolt',    color: '#F5F2EC', badge: 'Más vendido' },
-    { id: 2, cat: 'grip',       name: 'Tiza en polvo',     sub: 'Chalk Block · 56 g',     price: 5.00,  icon: 'sparkle', color: '#F5F2EC' },
-    { id: 3, cat: 'grip',       name: 'Dry Hands',         sub: 'Grip líquido · 45 ml',   price: 12.00, icon: 'bolt',    color: '#F5F2EC' },
-    { id: 4, cat: 'accesorios', name: 'Rodilleras pole',   sub: 'ProGrip · el par',       price: 18.00, icon: 'shield',  color: '#ECE4F9', badge: 'Nuevo' },
-    { id: 5, cat: 'accesorios', name: 'Calcetines grip',   sub: 'Non-slip · talla única', price: 9.00,  icon: 'users',   color: '#ECE4F9' },
-    { id: 6, cat: 'accesorios', name: 'Toalla microfibra', sub: '40×80 cm · POLEBOX',     price: 12.00, icon: 'refresh', color: '#ECE4F9' },
-    { id: 7, cat: 'ropa',       name: 'Shorts pole',       sub: 'POLEBOX · XS–XL',        price: 28.00, icon: 'profile', color: '#C6F2DD' },
-    { id: 8, cat: 'ropa',       name: 'Top sin tirantes',  sub: 'POLEBOX · XS–XL',        price: 24.00, icon: 'profile', color: '#C6F2DD' },
-  ];
-
-  const filtered = cat === 'todo' ? products : products.filter(p => p.cat === cat);
-
+  const filtered = cat === 'todo' ? STORE_PRODUCTS : STORE_PRODUCTS.filter(p => p.cat === cat);
   const add    = (id) => setCart(c => ({ ...c, [id]: (c[id] || 0) + 1 }));
-  const remove = (id) => setCart(c => {
-    const n = { ...c };
-    if (n[id] > 1) n[id]--; else delete n[id];
-    return n;
-  });
+  const remove = (id) => setCart(c => { const n = { ...c }; if (n[id] > 1) n[id]--; else delete n[id]; return n; });
 
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
   const totalPrice = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const p = products.find(p => p.id === parseInt(id));
+    const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
     return sum + (p ? p.price * qty : 0);
   }, 0);
-  const fmtPrice = (n) => n.toFixed(2).replace('.', ',') + ' €';
+  const fmt = (n) => n.toFixed(2).replace('.', ',') + ' €';
 
   return (
     <>
       <StatusBar/>
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: totalItems > 0 ? 200 : 110 }}>
-
-        {/* Header */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: totalItems > 0 ? 120 : 110 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px 12px' }}>
           <button onClick={onBack} style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
             <Icon name="back" size={18}/>
           </button>
           <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', margin: 0, flex: 1 }}>Tienda</h3>
-          {totalItems > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, background: PB.morado, color: '#fff', fontFamily: PB.font, fontWeight: 700, fontSize: 12 }}>
-              <Icon name="card" size={14} color="#fff"/>
-              {totalItems} art.
-            </div>
-          )}
         </div>
 
-        {/* Banner recogida */}
-        <div style={{ margin: '0 16px 16px', padding: '10px 14px', borderRadius: 14, background: PB.mentaSoft, color: PB.moradoInk, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 10, background: PB.menta, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-            <Icon name="bolt" size={16} color={PB.moradoInk}/>
-          </div>
-          <div style={{ fontSize: 12, lineHeight: 1.4 }}>
-            <strong style={{ fontWeight: 800 }}>Recogida en pasillo</strong> — Paga aquí y recoge en la entrada de tu sede al llegar.
-          </div>
+        {/* Métodos de entrega */}
+        <div style={{ margin: '0 16px 16px', display: 'flex', gap: 8 }}>
+          {[
+            { icon: 'bolt',    label: 'Locker en sede',    sub: 'Gratis', bg: PB.mentaSoft },
+            { icon: 'refresh', label: 'Envío a domicilio', sub: 'desde 4,99 €', bg: PB.surface2 },
+          ].map(m => (
+            <div key={m.label} style={{ flex: 1, padding: '10px 12px', borderRadius: 14, background: m.bg, border: `1px solid ${PB.line}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon name={m.icon} size={16} color={PB.morado}/>
+              <div>
+                <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 11, color: PB.ink }}>{m.label}</div>
+                <div style={{ fontSize: 10, color: PB.success, fontWeight: 700 }}>{m.sub}</div>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Categorías */}
@@ -3023,42 +3016,31 @@ const ScreenStore = ({ onBack }) => {
           </div>
         </div>
 
-        {/* Grid de productos */}
+        {/* Grid productos */}
         <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {filtered.map(p => {
             const qty = cart[p.id] || 0;
             return (
               <div key={p.id} style={{
                 borderRadius: 18, overflow: 'hidden', background: PB.surface,
-                border: `1px solid ${qty > 0 ? PB.morado : PB.line}`,
-                boxShadow: qty > 0 ? '0 6px 18px rgba(72,35,128,.15)' : '0 2px 8px rgba(20,19,24,.05)',
+                border: `1.5px solid ${qty > 0 ? PB.morado : PB.line}`,
+                boxShadow: qty > 0 ? '0 6px 18px rgba(72,35,128,.15)' : '0 2px 8px rgba(20,19,24,.04)',
                 transition: 'all 220ms cubic-bezier(.2,.7,.2,1)',
               }}>
-                {/* Imagen placeholder */}
                 <div style={{ height: 110, background: p.color, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 54, height: 54, borderRadius: 16, background: '#fff', display: 'grid', placeItems: 'center', boxShadow: '0 4px 14px rgba(20,19,24,.1)', color: PB.morado }}>
+                  <div style={{ width: 54, height: 54, borderRadius: 16, background: '#fff', display: 'grid', placeItems: 'center', boxShadow: '0 4px 14px rgba(20,19,24,.1)' }}>
                     <Icon name={p.icon} size={26} color={PB.morado}/>
                   </div>
-                  {p.badge && (
-                    <div style={{ position: 'absolute', top: 8, left: 8, padding: '3px 8px', borderRadius: 999, background: PB.morado, color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' }}>{p.badge}</div>
-                  )}
-                  {qty > 0 && (
-                    <div style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 999, background: PB.morado, color: '#fff', display: 'grid', placeItems: 'center', fontFamily: PB.mono, fontWeight: 700, fontSize: 12 }}>{qty}</div>
-                  )}
+                  {p.badge && <div style={{ position: 'absolute', top: 8, left: 8, padding: '3px 8px', borderRadius: 999, background: PB.morado, color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' }}>{p.badge}</div>}
+                  {qty > 0 && <div style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 999, background: PB.morado, color: '#fff', display: 'grid', placeItems: 'center', fontFamily: PB.mono, fontWeight: 700, fontSize: 12 }}>{qty}</div>}
                 </div>
-
-                {/* Info + controles */}
                 <div style={{ padding: '10px 10px 12px' }}>
                   <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.ink, lineHeight: 1.3 }}>{p.name}</div>
                   <div style={{ fontSize: 11, color: PB.ink3, marginTop: 2 }}>{p.sub}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
-                    <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 15, color: PB.ink }}>{fmtPrice(p.price)}</span>
+                    <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 15, color: PB.ink }}>{fmt(p.price)}</span>
                     {qty === 0 ? (
-                      <button onClick={() => add(p.id)} style={{
-                        width: 32, height: 32, borderRadius: 999, border: 0,
-                        background: PB.morado, color: '#fff', display: 'grid', placeItems: 'center',
-                        cursor: 'pointer', boxShadow: '0 4px 10px rgba(72,35,128,.3)',
-                      }}>
+                      <button onClick={() => add(p.id)} style={{ width: 32, height: 32, borderRadius: 999, border: 0, background: PB.morado, color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 4px 10px rgba(72,35,128,.3)' }}>
                         <Icon name="plus" size={16} color="#fff"/>
                       </button>
                     ) : (
@@ -3078,44 +3060,800 @@ const ScreenStore = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Cesta sticky */}
       {totalItems > 0 && (
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0,
-          padding: '16px 16px 26px', borderTopLeftRadius: 28, borderTopRightRadius: 28,
-          background: PB.surface, boxShadow: '0 -12px 30px rgba(20,19,24,.1)',
-          borderTop: `1px solid ${PB.line}`,
-        }}>
-          {/* Desglose */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-            {Object.entries(cart).map(([id, qty]) => {
-              const p = products.find(p => p.id === parseInt(id));
-              if (!p) return null;
-              return (
-                <div key={id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: PB.ink2 }}>
-                  <span>{p.name} ×{qty}</span>
-                  <span style={{ fontFamily: PB.mono, fontWeight: 600 }}>{fmtPrice(p.price * qty)}</span>
-                </div>
-              );
-            })}
-            <div style={{ height: 1, background: PB.line, margin: '4px 0' }}/>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15 }}>Total</span>
-              <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 20, color: PB.ink }}>{fmtPrice(totalPrice)}</span>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 16px 26px', background: 'rgba(250,250,247,.95)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${PB.line}` }}>
+          <button onClick={onCart} style={{
+            width: '100%', padding: '16px 20px', borderRadius: 16, border: 0, cursor: 'pointer',
+            background: PB.morado, color: '#fff', fontFamily: PB.font, fontWeight: 700, fontSize: 15,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            boxShadow: '0 8px 22px rgba(72,35,128,.35)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 26, height: 26, borderRadius: 999, background: 'rgba(255,255,255,.25)', display: 'grid', placeItems: 'center', fontFamily: PB.mono, fontWeight: 800, fontSize: 13 }}>{totalItems}</div>
+              Ver carrito
             </div>
-          </div>
-          <Button full icon="arrow" style={{ padding: '16px', fontSize: 15 }}>
-            Pagar y reservar recogida
-          </Button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 15 }}>{fmt(totalPrice)}</span>
+              <Icon name="chevron" size={18} color="#fff"/>
+            </div>
+          </button>
         </div>
       )}
-
       <TabBar active="home"/>
     </>
   );
 };
 
 window.ScreenStore = ScreenStore;
+
+</script>
+<script type="text/babel">
+// POLEBOX — Carrito + elección de método de entrega
+
+const ScreenStoreCart = ({ onBack, cart, setCart, onDelivery }) => {
+  const [method, setMethod] = React.useState(null); // 'locker' | 'home'
+
+  const add    = (id) => setCart(c => ({ ...c, [id]: (c[id] || 0) + 1 }));
+  const remove = (id) => setCart(c => { const n = { ...c }; if (n[id] > 1) n[id]--; else delete n[id]; return n; });
+
+  const subtotal = Object.entries(cart).reduce((sum, [id, qty]) => {
+    const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
+    return sum + (p ? p.price * qty : 0);
+  }, 0);
+  const shipping = method === 'home' ? 4.99 : 0;
+  const total    = subtotal + shipping;
+  const fmt      = (n) => n.toFixed(2).replace('.', ',') + ' €';
+  const items    = Object.entries(cart).filter(([, q]) => q > 0);
+
+  const methods = [
+    {
+      id: 'locker',
+      icon: 'bolt',
+      title: 'Recogida en locker',
+      sub: 'Gratis · disponible al llegar a tu sede',
+      badge: 'Gratis',
+      badgeColor: PB.success,
+      badgeBg: PB.successBg,
+    },
+    {
+      id: 'home',
+      icon: 'refresh',
+      title: 'Envío a domicilio',
+      sub: '4,99 € · 3–5 días hábiles · Correos Express',
+      badge: '4,99 €',
+      badgeColor: PB.warn,
+      badgeBg: PB.warnBg,
+    },
+  ];
+
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: method ? 200 : 110 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px 16px' }}>
+          <button onClick={onBack} style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+            <Icon name="back" size={18}/>
+          </button>
+          <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', margin: 0, flex: 1 }}>Tu carrito</h3>
+          <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, color: PB.ink3 }}>{items.length} producto{items.length !== 1 ? 's' : ''}</span>
+        </div>
+
+        {/* Artículos */}
+        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {items.map(([id, qty]) => {
+            const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
+            if (!p) return null;
+            return (
+              <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, background: PB.surface, border: `1px solid ${PB.line}` }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: p.color, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Icon name={p.icon} size={20} color={PB.morado}/>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>{p.name}</div>
+                  <div style={{ fontSize: 11, color: PB.ink3 }}>{p.sub}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={() => remove(p.id)} style={{ width: 26, height: 26, borderRadius: 999, border: `1px solid ${PB.line}`, background: PB.surface2, display: 'grid', placeItems: 'center', cursor: 'pointer', fontWeight: 800, fontSize: 15, color: PB.ink }}>−</button>
+                    <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 14, color: PB.morado, minWidth: 14, textAlign: 'center' }}>{qty}</span>
+                    <button onClick={() => add(p.id)} style={{ width: 26, height: 26, borderRadius: 999, border: 0, background: PB.morado, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+                      <Icon name="plus" size={13} color="#fff"/>
+                    </button>
+                  </div>
+                  <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 14, color: PB.ink, minWidth: 50, textAlign: 'right' }}>{fmt(p.price * qty)}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Método de entrega */}
+        <div style={{ padding: '22px 16px 8px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 10 }}>¿Cómo lo recibes?</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {methods.map(m => {
+              const sel = method === m.id;
+              return (
+                <button key={m.id} onClick={() => setMethod(m.id)} style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '14px 16px', borderRadius: 18, cursor: 'pointer', textAlign: 'left',
+                  border: `2px solid ${sel ? PB.morado : PB.line}`,
+                  background: sel ? 'rgba(72,35,128,.04)' : PB.surface,
+                  boxShadow: sel ? '0 6px 18px rgba(72,35,128,.12)' : 'none',
+                  transition: 'all 220ms cubic-bezier(.2,.7,.2,1)',
+                }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: sel ? PB.morado : PB.surface2, display: 'grid', placeItems: 'center', flexShrink: 0, transition: 'background 220ms' }}>
+                    <Icon name={m.icon} size={20} color={sel ? '#fff' : PB.morado}/>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 15, color: PB.ink }}>{m.title}</div>
+                    <div style={{ fontSize: 11, color: PB.ink3, marginTop: 2 }}>{m.sub}</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                    <span style={{ padding: '3px 8px', borderRadius: 999, background: m.badgeBg, color: m.badgeColor, fontSize: 10, fontWeight: 800 }}>{m.badge}</span>
+                    <div style={{ width: 20, height: 20, borderRadius: 999, border: `2px solid ${sel ? PB.morado : PB.lineStrong}`, background: sel ? PB.morado : 'transparent', display: 'grid', placeItems: 'center' }}>
+                      {sel && <Icon name="check" size={11} color="#fff"/>}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Desglose precios */}
+        <div style={{ margin: '16px 16px 0', padding: '14px 16px', borderRadius: 16, background: PB.surface, border: `1px solid ${PB.line}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: PB.ink2, marginBottom: 6 }}>
+            <span>Subtotal</span><span style={{ fontFamily: PB.mono, fontWeight: 600 }}>{fmt(subtotal)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: PB.ink2, marginBottom: 8 }}>
+            <span>Envío</span><span style={{ fontFamily: PB.mono, fontWeight: 600, color: shipping === 0 ? PB.success : PB.ink2 }}>{shipping === 0 ? 'Gratis' : fmt(shipping)}</span>
+          </div>
+          <div style={{ height: 1, background: PB.line, marginBottom: 8 }}/>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15 }}>Total</span>
+            <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 20, color: PB.ink }}>{fmt(total)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA continuar */}
+      {method && (
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 16px 26px', background: PB.surface, boxShadow: '0 -12px 30px rgba(20,19,24,.1)', borderTop: `1px solid ${PB.line}`, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}>
+          <Button onClick={() => onDelivery(method)} full icon="arrow" style={{ padding: '18px', fontSize: 16 }}>
+            {method === 'locker' ? 'Elegir sede y locker' : 'Introducir dirección'}
+          </Button>
+        </div>
+      )}
+      <TabBar active="home"/>
+    </>
+  );
+};
+
+window.ScreenStoreCart = ScreenStoreCart;
+
+</script>
+<script type="text/babel">
+// POLEBOX — Dirección de envío a domicilio
+
+const ScreenStoreAddress = ({ onBack, onConfirm }) => {
+  const [form, setForm] = React.useState({
+    nombre: 'Laura Gómez',
+    telefono: '+34 612 345 678',
+    calle: 'C/ Velázquez 42, 3ºB',
+    ciudad: 'Madrid',
+    cp: '28001',
+    provincia: 'Madrid',
+    guardar: true,
+  });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const Field = ({ label, k, type = 'text', placeholder }) => (
+    <div style={{ marginBottom: 12 }}>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 6 }}>{label}</label>
+      <input
+        type={type}
+        value={form[k]}
+        onChange={e => set(k, e.target.value)}
+        placeholder={placeholder}
+        style={{
+          width: '100%', boxSizing: 'border-box',
+          padding: '13px 14px', borderRadius: 12, border: `1px solid ${PB.line}`,
+          background: PB.surface2, fontFamily: PB.font, fontSize: 14, color: PB.ink,
+          outline: 'none', transition: 'border-color 180ms',
+        }}
+        onFocus={e => e.target.style.borderColor = PB.morado}
+        onBlur={e => e.target.style.borderColor = PB.line}
+      />
+    </div>
+  );
+
+  const valid = form.nombre && form.telefono && form.calle && form.ciudad && form.cp;
+
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 140 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px 16px' }}>
+          <button onClick={onBack} style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+            <Icon name="back" size={18}/>
+          </button>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>Paso 1 de 3</div>
+            <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, letterSpacing: '-0.01em', margin: '2px 0 0' }}>Dirección de envío</h3>
+          </div>
+        </div>
+
+        {/* Progreso */}
+        <div style={{ padding: '0 16px 20px', display: 'flex', gap: 6 }}>
+          {[1,2,3].map(i => (
+            <div key={i} style={{ flex: 1, height: 4, borderRadius: 999, background: i <= 1 ? PB.morado : PB.surface3 }}/>
+          ))}
+        </div>
+
+        <div style={{ padding: '0 16px' }}>
+          <Field label="Nombre completo" k="nombre" placeholder="Tu nombre"/>
+          <Field label="Teléfono" k="telefono" type="tel" placeholder="+34 600 000 000"/>
+          <Field label="Calle y número" k="calle" placeholder="C/ Mayor 1, 2ºA"/>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 6 }}>Ciudad</label>
+              <input value={form.ciudad} onChange={e => set('ciudad', e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: '13px 14px', borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface2, fontFamily: PB.font, fontSize: 14, color: PB.ink, outline: 'none' }}/>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 6 }}>Código postal</label>
+              <input value={form.cp} onChange={e => set('cp', e.target.value)} maxLength={5} style={{ width: '100%', boxSizing: 'border-box', padding: '13px 14px', borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface2, fontFamily: PB.font, fontSize: 14, color: PB.ink, outline: 'none' }}/>
+            </div>
+          </div>
+          <Field label="Provincia" k="provincia" placeholder="Provincia"/>
+
+          {/* Guardar */}
+          <button onClick={() => set('guardar', !form.guardar)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 0, padding: '12px 0', cursor: 'pointer', width: '100%' }}>
+            <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${form.guardar ? PB.morado : PB.lineStrong}`, background: form.guardar ? PB.morado : 'transparent', display: 'grid', placeItems: 'center', transition: 'all 180ms', flexShrink: 0 }}>
+              {form.guardar && <Icon name="check" size={13} color="#fff"/>}
+            </div>
+            <span style={{ fontFamily: PB.font, fontWeight: 600, fontSize: 13, color: PB.ink2 }}>Guardar como dirección habitual</span>
+          </button>
+
+          {/* Info envío */}
+          <div style={{ marginTop: 8, padding: '12px 14px', borderRadius: 14, background: PB.surface2, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <Icon name="refresh" size={16} color={PB.ink3}/>
+            <div style={{ fontSize: 12, color: PB.ink3, lineHeight: 1.5 }}>
+              Envío por <strong style={{ color: PB.ink2 }}>Correos Express</strong> · 3–5 días hábiles · recibirás el número de seguimiento por email.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 16px 26px', background: PB.surface, boxShadow: '0 -12px 30px rgba(20,19,24,.1)', borderTop: `1px solid ${PB.line}`, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}>
+        <Button onClick={valid ? () => onConfirm(form) : undefined} full icon="arrow" style={{ padding: '18px', fontSize: 16, opacity: valid ? 1 : .45, cursor: valid ? 'pointer' : 'not-allowed' }}>
+          Confirmar dirección
+        </Button>
+      </div>
+      <TabBar active="home"/>
+    </>
+  );
+};
+
+window.ScreenStoreAddress = ScreenStoreAddress;
+
+</script>
+<script type="text/babel">
+// POLEBOX — Selector de sede y locker para recogida
+
+const STORE_VENUES = [
+  { id: 'mad-salamanca', name: 'Salamanca',  city: 'Madrid',    addr: 'C/ Velázquez 42 · 28001', lockers: 4, dist: '0,8 km' },
+  { id: 'mad-chamberi',  name: 'Chamberí',   city: 'Madrid',    addr: 'C/ Fuencarral 120 · 28010', lockers: 2, dist: '2,1 km' },
+  { id: 'mad-malasana',  name: 'Malasaña',   city: 'Madrid',    addr: 'C/ Espíritu Santo 8 · 28004', lockers: 3, dist: '3,4 km' },
+  { id: 'bcn-gracia',    name: 'Gràcia',     city: 'Barcelona', addr: 'C/ Verdi 60 · 08012', lockers: 5, dist: '612 km' },
+];
+window.STORE_VENUES = STORE_VENUES;
+
+const ScreenStorePickup = ({ onBack, onConfirm }) => {
+  const [venueId, setVenueId] = React.useState(null);
+  const [lockerId, setLockerId] = React.useState(null);
+  const venue = STORE_VENUES.find(v => v.id === venueId);
+
+  // Lockers simulados para la sede seleccionada
+  const lockers = venue ? Array.from({ length: venue.lockers }, (_, i) => ({
+    id: `L${i + 1}`,
+    label: `Locker ${i + 1}`,
+    size: ['S', 'M', 'M', 'L', 'L'][i] || 'M',
+    free: i !== 1, // locker 2 siempre ocupado (demo)
+  })) : [];
+
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: lockerId ? 140 : 110 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px 16px' }}>
+          <button onClick={onBack} style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+            <Icon name="back" size={18}/>
+          </button>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>Paso 1 de 3</div>
+            <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, letterSpacing: '-0.01em', margin: '2px 0 0' }}>Elige sede y locker</h3>
+          </div>
+        </div>
+
+        {/* Progreso */}
+        <div style={{ padding: '0 16px 20px', display: 'flex', gap: 6 }}>
+          {[1,2,3].map(i => <div key={i} style={{ flex: 1, height: 4, borderRadius: 999, background: i <= 1 ? PB.morado : PB.surface3 }}/>)}
+        </div>
+
+        {/* Sedes */}
+        <div style={{ padding: '0 20px 4px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 10 }}>1 · Selecciona sede</div>
+        </div>
+        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {STORE_VENUES.map(v => {
+            const sel = v.id === venueId;
+            return (
+              <button key={v.id} onClick={() => { setVenueId(v.id); setLockerId(null); }} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '14px 16px', borderRadius: 16, cursor: 'pointer', textAlign: 'left',
+                border: `2px solid ${sel ? PB.morado : PB.line}`,
+                background: sel ? 'rgba(72,35,128,.04)' : PB.surface,
+                boxShadow: sel ? '0 6px 18px rgba(72,35,128,.1)' : 'none',
+                transition: 'all 220ms cubic-bezier(.2,.7,.2,1)',
+              }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: sel ? PB.morado : PB.surface2, display: 'grid', placeItems: 'center', flexShrink: 0, transition: 'background 220ms' }}>
+                  <Icon name="bolt" size={18} color={sel ? '#fff' : PB.morado}/>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>POLEBOX {v.name}</div>
+                  <div style={{ fontSize: 11, color: PB.ink3, marginTop: 2 }}>{v.city} · {v.addr}</div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: PB.success }}>{v.lockers} libres</div>
+                  <div style={{ fontSize: 10, color: PB.ink4, marginTop: 2 }}>{v.dist}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Lockers */}
+        {venue && (
+          <>
+            <div style={{ padding: '22px 20px 8px' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 10 }}>2 · Elige locker en {venue.name}</div>
+            </div>
+            <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {lockers.map(l => {
+                const sel = l.id === lockerId;
+                return (
+                  <button key={l.id} onClick={() => l.free && setLockerId(l.id)} style={{
+                    padding: '14px 8px', borderRadius: 16, cursor: l.free ? 'pointer' : 'not-allowed',
+                    border: `2px solid ${sel ? PB.morado : (l.free ? PB.line : PB.surface3)}`,
+                    background: sel ? PB.morado : (l.free ? PB.surface : PB.surface2),
+                    opacity: l.free ? 1 : .45,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    transition: 'all 220ms',
+                  }}>
+                    <div style={{ fontSize: 24 }}>🔒</div>
+                    <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 12, color: sel ? '#fff' : PB.ink }}>{l.label}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: sel ? 'rgba(255,255,255,.7)' : (l.free ? PB.success : PB.danger) }}>
+                      Talla {l.size} · {l.free ? 'Libre' : 'Ocupado'}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ padding: '12px 20px 0', fontSize: 11, color: PB.ink4, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icon name="bolt" size={12}/> El locker queda reservado a tu nombre hasta tu próxima visita.
+            </div>
+          </>
+        )}
+      </div>
+
+      {lockerId && venue && (
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 16px 26px', background: PB.surface, boxShadow: '0 -12px 30px rgba(20,19,24,.1)', borderTop: `1px solid ${PB.line}`, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}>
+          <Button onClick={() => onConfirm({ venueId: venue.id, venueName: venue.name, venueAddr: venue.addr, lockerId })} full icon="arrow" style={{ padding: '18px', fontSize: 16 }}>
+            Reservar {lockerId} en {venue.name}
+          </Button>
+        </div>
+      )}
+      <TabBar active="home"/>
+    </>
+  );
+};
+
+window.ScreenStorePickup = ScreenStorePickup;
+
+</script>
+<script type="text/babel">
+// POLEBOX — Resumen completo del pedido antes de pagar
+
+const ScreenStoreOrder = ({ onBack, cart, delivery, address, pickup, onPay }) => {
+  const subtotal = Object.entries(cart).reduce((sum, [id, qty]) => {
+    const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
+    return sum + (p ? p.price * qty : 0);
+  }, 0);
+  const shipping = delivery === 'home' ? 4.99 : 0;
+  const total    = subtotal + shipping;
+  const fmt      = (n) => n.toFixed(2).replace('.', ',') + ' €';
+  const items    = Object.entries(cart).filter(([, q]) => q > 0);
+
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 180 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px 16px' }}>
+          <button onClick={onBack} style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+            <Icon name="back" size={18}/>
+          </button>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>Paso 2 de 3</div>
+            <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, letterSpacing: '-0.01em', margin: '2px 0 0' }}>Resumen del pedido</h3>
+          </div>
+        </div>
+
+        {/* Progreso */}
+        <div style={{ padding: '0 16px 20px', display: 'flex', gap: 6 }}>
+          {[1,2,3].map(i => <div key={i} style={{ flex: 1, height: 4, borderRadius: 999, background: i <= 2 ? PB.morado : PB.surface3 }}/>)}
+        </div>
+
+        {/* Artículos */}
+        <div style={{ padding: '0 20px 8px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 10 }}>Productos</div>
+        </div>
+        <div style={{ margin: '0 16px', borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}`, overflow: 'hidden' }}>
+          {items.map(([id, qty], i) => {
+            const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
+            if (!p) return null;
+            return (
+              <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: i > 0 ? `1px solid ${PB.line}` : 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: p.color, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Icon name={p.icon} size={16} color={PB.morado}/>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: PB.font, fontWeight: 600, fontSize: 13, color: PB.ink }}>{p.name}</div>
+                  <div style={{ fontSize: 11, color: PB.ink3 }}>×{qty}</div>
+                </div>
+                <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 14, color: PB.ink }}>{fmt(p.price * qty)}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Entrega */}
+        <div style={{ padding: '20px 20px 8px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 10 }}>Entrega</div>
+        </div>
+        <div style={{ margin: '0 16px', padding: '14px 16px', borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}` }}>
+          {delivery === 'locker' ? (
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: PB.mentaSoft, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <Icon name="bolt" size={18} color={PB.morado}/>
+              </div>
+              <div>
+                <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>Recogida en locker</div>
+                <div style={{ fontSize: 12, color: PB.ink3, marginTop: 2 }}>POLEBOX {pickup.venueName}</div>
+                <div style={{ fontSize: 12, color: PB.ink3 }}>{pickup.venueAddr}</div>
+                <div style={{ fontSize: 12, color: PB.ink3, marginTop: 4 }}>Locker <strong style={{ color: PB.morado, fontWeight: 700 }}>{pickup.lockerId}</strong> reservado · válido 48 h</div>
+                <span style={{ display: 'inline-block', marginTop: 6, padding: '3px 8px', borderRadius: 999, background: PB.successBg, color: PB.success, fontSize: 10, fontWeight: 800 }}>Gratis</span>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: PB.warnBg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <Icon name="refresh" size={18} color={PB.warn}/>
+              </div>
+              <div>
+                <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>Envío a domicilio</div>
+                <div style={{ fontSize: 12, color: PB.ink3, marginTop: 2 }}>{address.nombre}</div>
+                <div style={{ fontSize: 12, color: PB.ink3 }}>{address.calle}</div>
+                <div style={{ fontSize: 12, color: PB.ink3 }}>{address.cp} {address.ciudad}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                  <span style={{ padding: '3px 8px', borderRadius: 999, background: PB.warnBg, color: PB.warn, fontSize: 10, fontWeight: 800 }}>4,99 €</span>
+                  <span style={{ fontSize: 11, color: PB.ink3 }}>· 3–5 días hábiles · Correos Express</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Desglose */}
+        <div style={{ margin: '14px 16px 0', padding: '14px 16px', borderRadius: 16, background: PB.surface, border: `1px solid ${PB.line}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: PB.ink2, marginBottom: 6 }}>
+            <span>Subtotal</span><span style={{ fontFamily: PB.mono, fontWeight: 600 }}>{fmt(subtotal)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: PB.ink2, marginBottom: 8 }}>
+            <span>Envío</span><span style={{ fontFamily: PB.mono, fontWeight: 600, color: shipping === 0 ? PB.success : PB.ink2 }}>{shipping === 0 ? 'Gratis' : fmt(shipping)}</span>
+          </div>
+          <div style={{ height: 1, background: PB.line, marginBottom: 8 }}/>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15 }}>Total</span>
+            <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 20, color: PB.ink }}>{fmt(total)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 16px 26px', background: PB.surface, boxShadow: '0 -12px 30px rgba(20,19,24,.1)', borderTop: `1px solid ${PB.line}`, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Total a pagar</div>
+          <div style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 22, color: PB.ink }}>{fmt(total)}</div>
+        </div>
+        <Button onClick={() => onPay(total)} full icon="arrow" style={{ padding: '18px', fontSize: 16 }}>
+          Ir al pago
+        </Button>
+      </div>
+      <TabBar active="home"/>
+    </>
+  );
+};
+
+window.ScreenStoreOrder = ScreenStoreOrder;
+
+</script>
+<script type="text/babel">
+// POLEBOX — Pago de la tienda
+
+const ScreenStorePayment = ({ onBack, total, onSuccess }) => {
+  const [method, setMethod] = React.useState('card');
+  const [phase, setPhase]   = React.useState('form'); // form | processing | done
+  const fmt = (n) => n.toFixed(2).replace('.', ',') + ' €';
+
+  const methods = [
+    { id: 'apple',  label: 'Apple Pay',  sub: 'Touch ID / Face ID' },
+    { id: 'card',   label: 'Tarjeta',    sub: 'Visa · Mastercard · Amex' },
+    { id: 'gpay',   label: 'Google Pay', sub: 'Pago rápido' },
+    { id: 'bizum',  label: 'Bizum',      sub: 'Desde tu móvil' },
+  ];
+
+  React.useEffect(() => {
+    if (phase === 'processing') {
+      const t1 = setTimeout(() => setPhase('done'), 1400);
+      const t2 = setTimeout(() => onSuccess && onSuccess(), 2600);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [phase]);
+
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 180 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px 16px' }}>
+          <button onClick={onBack} style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+            <Icon name="back" size={18}/>
+          </button>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>Paso 3 de 3</div>
+            <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, letterSpacing: '-0.01em', margin: '2px 0 0' }}>Método de pago</h3>
+          </div>
+        </div>
+
+        {/* Progreso */}
+        <div style={{ padding: '0 16px 20px', display: 'flex', gap: 6 }}>
+          {[1,2,3].map(i => <div key={i} style={{ flex: 1, height: 4, borderRadius: 999, background: PB.morado }}/>)}
+        </div>
+
+        {phase === 'done' ? (
+          <div style={{ padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16 }}>
+            <div style={{ width: 72, height: 72, borderRadius: 999, background: PB.successBg, display: 'grid', placeItems: 'center' }}>
+              <Icon name="check" size={36} color={PB.success}/>
+            </div>
+            <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 22, color: PB.ink }}>Pago confirmado</div>
+            <div style={{ fontSize: 13, color: PB.ink3 }}>Preparando tu pedido…</div>
+          </div>
+        ) : (
+          <>
+            {/* Métodos */}
+            <div style={{ margin: '0 16px', borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}`, overflow: 'hidden', padding: 6 }}>
+              {methods.map((m, i) => {
+                const on = method === m.id;
+                return (
+                  <button key={m.id} onClick={() => setMethod(m.id)} style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '12px 12px', borderRadius: 12, border: 0, cursor: 'pointer',
+                    background: on ? PB.mentaSoft : 'transparent', textAlign: 'left',
+                    borderTop: i > 0 ? `1px solid ${on ? 'transparent' : PB.line}` : 0,
+                  }}>
+                    <div style={{ width: 40, height: 32, borderRadius: 8, background: '#fff', border: `1px solid ${PB.line}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                      <Icon name="card" size={18} color={PB.ink2}/>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>{m.label}</div>
+                      <div style={{ fontSize: 11, color: PB.ink3 }}>{m.sub}</div>
+                    </div>
+                    <div style={{ width: 22, height: 22, borderRadius: 999, border: `2px solid ${on ? PB.morado : PB.lineStrong}`, background: on ? PB.morado : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                      {on && <Icon name="check" size={12} color="#fff"/>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tarjeta guardada */}
+            {method === 'card' && (
+              <div style={{ margin: '14px 16px 0', padding: '14px 16px', borderRadius: 16, background: PB.surface, border: `1px solid ${PB.line}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 44, height: 30, borderRadius: 6, background: PB.morado, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name="card" size={16} color="#fff"/>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.ink }}>Mastercard ····&nbsp;4242</div>
+                  <div style={{ fontSize: 11, color: PB.ink3 }}>Caduca 12/28</div>
+                </div>
+                <span style={{ padding: '3px 8px', borderRadius: 999, background: PB.successBg, color: PB.success, fontSize: 10, fontWeight: 800 }}>Predeterminada</span>
+              </div>
+            )}
+
+            <div style={{ margin: '14px 20px 0', display: 'flex', alignItems: 'center', gap: 8, color: PB.ink3, fontSize: 11 }}>
+              <Icon name="shield" size={13}/> Pago seguro procesado por <strong style={{ color: PB.ink2 }}>Stripe</strong>
+            </div>
+          </>
+        )}
+      </div>
+
+      {phase !== 'done' && (
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 16px 26px', background: PB.surface, boxShadow: '0 -12px 30px rgba(20,19,24,.1)', borderTop: `1px solid ${PB.line}`, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Total</span>
+            <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 22, color: PB.ink }}>{fmt(total || 0)}</span>
+          </div>
+          <button onClick={() => setPhase('processing')} disabled={phase === 'processing'} style={{
+            width: '100%', padding: '18px', borderRadius: 16, border: 0, cursor: 'pointer',
+            background: PB.morado, color: '#fff', fontFamily: PB.font, fontWeight: 700, fontSize: 16,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            boxShadow: '0 8px 22px rgba(72,35,128,.35)', opacity: phase === 'processing' ? .8 : 1,
+          }}>
+            {phase === 'processing' ? (
+              <><div style={{ width: 18, height: 18, borderRadius: 999, border: '2.5px solid rgba(255,255,255,.4)', borderTopColor: '#fff', animation: 'spin 700ms linear infinite' }}/><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>Procesando…</>
+            ) : (
+              <><Icon name="card" size={18} color="#fff"/> Pagar {fmt(total || 0)}</>
+            )}
+          </button>
+        </div>
+      )}
+      <TabBar active="home"/>
+    </>
+  );
+};
+
+window.ScreenStorePayment = ScreenStorePayment;
+
+</script>
+<script type="text/babel">
+// POLEBOX — Confirmación de pedido
+
+const ScreenStoreConfirm = ({ onDone, delivery, address, pickup, cart }) => {
+  const orderNum = React.useMemo(() => 'PB-' + Math.random().toString(36).slice(2,7).toUpperCase(), []);
+  const lockerCode = React.useMemo(() => Math.floor(1000 + Math.random() * 9000).toString(), []);
+
+  const items = Object.entries(cart || {}).filter(([, q]) => q > 0);
+  const fmt   = (n) => n.toFixed(2).replace('.', ',') + ' €';
+  const total = items.reduce((sum, [id, qty]) => {
+    const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
+    return sum + (p ? p.price * qty : 0);
+  }, 0) + (delivery === 'home' ? 4.99 : 0);
+
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 120 }}>
+
+        {/* Hero confirmación */}
+        <div style={{ margin: '20px 16px 0', padding: '28px 20px', borderRadius: 28, background: `linear-gradient(150deg, ${PB.morado} 0%, ${PB.moradoInk} 100%)`, color: '#fff', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: 999, background: 'rgba(128,227,183,.15)' }}/>
+          <div style={{ width: 64, height: 64, borderRadius: 999, background: PB.menta, display: 'grid', placeItems: 'center', margin: '0 auto 14px' }}>
+            <Icon name="check" size={34} color={PB.moradoInk}/>
+          </div>
+          <Eyebrow color={PB.menta}>Pedido confirmado</Eyebrow>
+          <h2 style={{ fontFamily: PB.font, fontWeight: 900, fontSize: 26, letterSpacing: '-0.02em', margin: '8px 0 4px', color: '#fff' }}>¡Listo! 🎉</h2>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,.75)', margin: '0 0 16px' }}>
+            Pedido <span style={{ fontFamily: PB.mono, fontWeight: 700, color: PB.menta }}>{orderNum}</span>
+          </div>
+          <div style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 28, letterSpacing: '-0.01em' }}>{fmt(total)}</div>
+        </div>
+
+        {/* Instrucciones de recogida / envío */}
+        {delivery === 'locker' ? (
+          <div style={{ margin: '16px 16px 0', padding: '20px', borderRadius: 22, background: PB.surface, border: `1px solid ${PB.line}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: PB.mentaSoft, display: 'grid', placeItems: 'center' }}>
+                <Icon name="bolt" size={22} color={PB.morado}/>
+              </div>
+              <div>
+                <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 16, color: PB.ink }}>Recogida en locker</div>
+                <div style={{ fontSize: 12, color: PB.ink3 }}>POLEBOX {pickup?.venueName}</div>
+              </div>
+            </div>
+
+            {/* Código */}
+            <div style={{ padding: '16px', borderRadius: 16, background: PB.morado, textAlign: 'center', marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,.6)', marginBottom: 8 }}>Código de apertura</div>
+              <div style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 44, letterSpacing: '.12em', color: PB.menta }}>{lockerCode}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', marginTop: 6 }}>Locker {pickup?.lockerId} · válido 48 h</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { icon: 'bolt',   text: 'Llega a POLEBOX ' + pickup?.venueName },
+                { icon: 'key',    text: 'Introduce el código en el locker ' + pickup?.lockerId },
+                { icon: 'check',  text: 'Recoge tu pedido y cierra el locker' },
+              ].map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 999, background: PB.surface2, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    <Icon name={s.icon} size={14} color={PB.morado}/>
+                  </div>
+                  <span style={{ fontSize: 13, color: PB.ink2 }}>{s.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 12, background: PB.warnBg, color: PB.warn, fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon name="bell" size={14} color={PB.warn}/> El código expira en 48 h. Guárdalo en un lugar seguro.
+            </div>
+          </div>
+        ) : (
+          <div style={{ margin: '16px 16px 0', padding: '20px', borderRadius: 22, background: PB.surface, border: `1px solid ${PB.line}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: PB.warnBg, display: 'grid', placeItems: 'center' }}>
+                <Icon name="refresh" size={22} color={PB.warn}/>
+              </div>
+              <div>
+                <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 16, color: PB.ink }}>Envío a domicilio</div>
+                <div style={{ fontSize: 12, color: PB.ink3 }}>Correos Express · 3–5 días hábiles</div>
+              </div>
+            </div>
+
+            <div style={{ padding: '12px 14px', borderRadius: 14, background: PB.surface2, marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 4 }}>Dirección de entrega</div>
+              <div style={{ fontFamily: PB.font, fontWeight: 600, fontSize: 13, color: PB.ink }}>{address?.nombre}</div>
+              <div style={{ fontSize: 12, color: PB.ink3 }}>{address?.calle}</div>
+              <div style={{ fontSize: 12, color: PB.ink3 }}>{address?.cp} {address?.ciudad}</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { icon: 'check',   text: 'Pedido recibido y en preparación' },
+                { icon: 'refresh', text: 'Envío en 24–48 h laborables' },
+                { icon: 'bell',    text: 'Recibirás el nº de seguimiento por email' },
+              ].map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 999, background: PB.surface2, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    <Icon name={s.icon} size={14} color={PB.morado}/>
+                  </div>
+                  <span style={{ fontSize: 13, color: PB.ink2 }}>{s.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Artículos del pedido */}
+        <div style={{ margin: '14px 16px 0', padding: '14px 16px', borderRadius: 16, background: PB.surface, border: `1px solid ${PB.line}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 10 }}>Artículos</div>
+          {items.map(([id, qty]) => {
+            const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
+            if (!p) return null;
+            return (
+              <div key={id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderTop: `1px solid ${PB.line}` }}>
+                <span style={{ fontSize: 13, color: PB.ink2 }}>{p.name} ×{qty}</span>
+                <span style={{ fontFamily: PB.mono, fontWeight: 600, fontSize: 13 }}>{fmt(p.price * qty)}</span>
+              </div>
+            );
+          })}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0 0', borderTop: `1px solid ${PB.line}` }}>
+            <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 14 }}>Total pagado</span>
+            <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 16, color: PB.ink }}>{fmt(total)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 16px 26px', background: 'rgba(250,250,247,.95)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${PB.line}` }}>
+        <Button onClick={onDone} full variant="secondary" style={{ padding: '16px', fontSize: 15 }}>
+          Volver al inicio
+        </Button>
+      </div>
+      <TabBar active="home"/>
+    </>
+  );
+};
+
+window.ScreenStoreConfirm = ScreenStoreConfirm;
 
 </script>
 <script type="text/babel">
@@ -3131,22 +3869,20 @@ function useScreen(key, init) {
 
 function App() {
   const [screen, setScreen] = useScreen('pb_screen', 'home-public');
-  const [authed, setAuthed] = useScreen('pb_authed', 'no'); // 'yes' | 'no'
+  const [authed, setAuthed] = useScreen('pb_authed', 'no');
   const [venueId, setVenueId] = useScreen('pb_venue', 'mad-salamanca');
-  const [authWall, setAuthWall] = React.useState(null); // null | 'login' | 'register'
+  const [authWall, setAuthWall] = React.useState(null);
   const [booking, setBooking] = React.useState(null);
+
+  // Store state
+  const [storeCart, setStoreCart] = React.useState({});
+  const [storeDelivery, setStoreDelivery] = React.useState(null);
+  const [storeAddress, setStoreAddress] = React.useState({});
+  const [storePickup, setStorePickup] = React.useState(null);
+  const [storeTotal, setStoreTotal] = React.useState(0);
 
   const isAuthed = authed === 'yes';
 
-  const onTab = (id) => {
-    if (!isAuthed) { setAuthWall('login'); return; }
-    if (id === 'home') setScreen('dashboard');
-    else if (id === 'reservas') setScreen('book');
-    else if (id === 'llave') setScreen('key');
-    else if (id === 'perfil') setScreen('profile');
-  };
-
-  // Intercept TabBar clicks from legacy screens via global onTab override: we pass through per-screen.
   const renderScreen = () => {
     switch (screen) {
       case 'home-public':
@@ -3167,8 +3903,6 @@ function App() {
           onOpenKey={() => setScreen('key')}
           onStore={() => setScreen('store')}
         />;
-      case 'store':
-        return <ScreenStore onBack={() => setScreen('dashboard')}/>;
       case 'book':
         return <Screen3Book
           onBack={() => setScreen(isAuthed ? 'dashboard' : 'venue')}
@@ -3212,21 +3946,80 @@ function App() {
         return <ScreenSupport onBack={() => setScreen('profile')}/>;
       case 'faq':
         return <ScreenFAQ onBack={() => setScreen('profile')}/>;
+
+      // ── Tienda ────────────────────────────────────────────
+      case 'store':
+        return <ScreenStore
+          cart={storeCart} setCart={setStoreCart}
+          onBack={() => setScreen('dashboard')}
+          onCart={() => setScreen('store-cart')}
+        />;
+      case 'store-cart':
+        return <ScreenStoreCart
+          cart={storeCart} setCart={setStoreCart}
+          onBack={() => setScreen('store')}
+          onDelivery={(method) => {
+            setStoreDelivery(method);
+            setScreen(method === 'locker' ? 'store-pickup' : 'store-address');
+          }}
+        />;
+      case 'store-address':
+        return <ScreenStoreAddress
+          onBack={() => setScreen('store-cart')}
+          onConfirm={(addr) => { setStoreAddress(addr); setScreen('store-order'); }}
+        />;
+      case 'store-pickup':
+        return <ScreenStorePickup
+          onBack={() => setScreen('store-cart')}
+          onConfirm={(p) => { setStorePickup(p); setScreen('store-order'); }}
+        />;
+      case 'store-order':
+        return <ScreenStoreOrder
+          cart={storeCart}
+          delivery={storeDelivery}
+          address={storeAddress}
+          pickup={storePickup}
+          onBack={() => setScreen(storeDelivery === 'locker' ? 'store-pickup' : 'store-address')}
+          onPay={(t) => { setStoreTotal(t); setScreen('store-payment'); }}
+        />;
+      case 'store-payment':
+        return <ScreenStorePayment
+          total={storeTotal}
+          onBack={() => setScreen('store-order')}
+          onSuccess={() => setScreen('store-confirm')}
+        />;
+      case 'store-confirm':
+        return <ScreenStoreConfirm
+          cart={storeCart}
+          delivery={storeDelivery}
+          address={storeAddress}
+          pickup={storePickup}
+          onDone={() => { setStoreCart({}); setScreen('dashboard'); }}
+        />;
+
       default:
         return null;
     }
   };
 
-  const labels = {
-    'home-public': '01 Home público',
-    'venue':       '02 Sede',
-    'dashboard':   '03 Dashboard',
-    'book':        '04 Reserva',
-    'checkout':    '05 Resumen',
-    'stripe':      '06 Stripe',
-    'key':         '07 Llave',
-    'profile':     '08 Perfil',
-  };
+  const toolbarItems = [
+    { id: 'home-public',    label: '01 · Home' },
+    { id: 'venue',          label: '02 · Sede' },
+    { id: 'dashboard',      label: '03 · Dashboard' },
+    { id: 'book',           label: '04 · Reserva' },
+    { id: 'checkout',       label: '05 · Resumen' },
+    { id: 'stripe',         label: '06 · Stripe' },
+    { id: 'key',            label: '07 · Llave' },
+    { id: 'profile',        label: '08 · Perfil' },
+    { id: 'store',          label: '09 · Tienda' },
+    { id: 'store-cart',     label: '10 · Carrito' },
+    { id: 'store-address',  label: '11 · Dirección' },
+    { id: 'store-pickup',   label: '11 · Locker' },
+    { id: 'store-order',    label: '12 · Pedido' },
+    { id: 'store-payment',  label: '13 · Pago' },
+    { id: 'store-confirm',  label: '14 · Confirmado' },
+    { id: 'payment-add',    label: '+ Añadir tarjeta' },
+  ];
 
   return (
     <div style={{
@@ -3235,8 +4028,8 @@ function App() {
       padding: '24px 16px 40px', gap: 16,
       fontFamily: 'Archivo, system-ui, sans-serif',
     }}>
-      <Toolbar screen={screen} setScreen={setScreen} authed={isAuthed} setAuthed={setAuthed}/>
-      <div data-screen-label={labels[screen]}>
+      <Toolbar screen={screen} setScreen={setScreen} authed={isAuthed} setAuthed={setAuthed} items={toolbarItems}/>
+      <div data-screen-label={screen}>
         <Phone>
           {renderScreen()}
           {authWall && (
@@ -3259,26 +4052,14 @@ function App() {
   );
 }
 
-function Toolbar({ screen, setScreen, authed, setAuthed }) {
-  const items = [
-    { id: 'home-public', label: '01 · Home' },
-    { id: 'venue',       label: '02 · Sede' },
-    { id: 'dashboard',   label: '03 · Dashboard' },
-    { id: 'book',        label: '04 · Reserva' },
-    { id: 'checkout',    label: '05 · Resumen' },
-    { id: 'stripe',      label: '06 · Stripe' },
-    { id: 'key',         label: '07 · Llave' },
-    { id: 'profile',     label: '08 · Perfil' },
-    { id: 'store',       label: '09 · Tienda' },
-    { id: 'payment-add', label: '+ Añadir tarjeta' },
-  ];
+function Toolbar({ screen, setScreen, authed, setAuthed, items }) {
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
       <div style={{
         display: 'flex', gap: 6, padding: 6, borderRadius: 999,
         background: '#fff', border: '1px solid #E2E0D8',
         boxShadow: '0 4px 14px rgba(20,19,24,.06)',
-        flexWrap: 'wrap', justifyContent: 'center', maxWidth: 760,
+        flexWrap: 'wrap', justifyContent: 'center', maxWidth: 860,
       }}>
         {items.map(it => {
           const on = screen === it.id;
@@ -3315,11 +4096,11 @@ function Footer() {
     <div style={{
       fontFamily: 'Archivo, system-ui, sans-serif', fontSize: 11,
       color: '#6B6776', letterSpacing: '.14em', textTransform: 'uppercase',
-      fontWeight: 700, marginTop: 4, textAlign: 'center', maxWidth: 380,
+      fontWeight: 700, marginTop: 4, textAlign: 'center', maxWidth: 480,
     }}>
       POLEBOX · prototipo interactivo
       <div style={{ marginTop: 6, letterSpacing: 0, textTransform: 'none', fontWeight: 500, color: '#A19DAB' }}>
-        Explora como invitada → pulsa "Pagar" y aparece el muro de registro. Toggle arriba para simular sesión.
+        Flujo tienda: 09 Tienda → añade productos → Ver carrito → elige Locker o Domicilio → completa el pedido.
       </div>
     </div>
   );

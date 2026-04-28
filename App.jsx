@@ -10,22 +10,20 @@ function useScreen(key, init) {
 
 function App() {
   const [screen, setScreen] = useScreen('pb_screen', 'home-public');
-  const [authed, setAuthed] = useScreen('pb_authed', 'no'); // 'yes' | 'no'
+  const [authed, setAuthed] = useScreen('pb_authed', 'no');
   const [venueId, setVenueId] = useScreen('pb_venue', 'mad-salamanca');
-  const [authWall, setAuthWall] = React.useState(null); // null | 'login' | 'register'
+  const [authWall, setAuthWall] = React.useState(null);
   const [booking, setBooking] = React.useState(null);
+
+  // Store state
+  const [storeCart, setStoreCart] = React.useState({});
+  const [storeDelivery, setStoreDelivery] = React.useState(null);
+  const [storeAddress, setStoreAddress] = React.useState({});
+  const [storePickup, setStorePickup] = React.useState(null);
+  const [storeTotal, setStoreTotal] = React.useState(0);
 
   const isAuthed = authed === 'yes';
 
-  const onTab = (id) => {
-    if (!isAuthed) { setAuthWall('login'); return; }
-    if (id === 'home') setScreen('dashboard');
-    else if (id === 'reservas') setScreen('book');
-    else if (id === 'llave') setScreen('key');
-    else if (id === 'perfil') setScreen('profile');
-  };
-
-  // Intercept TabBar clicks from legacy screens via global onTab override: we pass through per-screen.
   const renderScreen = () => {
     switch (screen) {
       case 'home-public':
@@ -46,8 +44,6 @@ function App() {
           onOpenKey={() => setScreen('key')}
           onStore={() => setScreen('store')}
         />;
-      case 'store':
-        return <ScreenStore onBack={() => setScreen('dashboard')}/>;
       case 'book':
         return <Screen3Book
           onBack={() => setScreen(isAuthed ? 'dashboard' : 'venue')}
@@ -91,21 +87,80 @@ function App() {
         return <ScreenSupport onBack={() => setScreen('profile')}/>;
       case 'faq':
         return <ScreenFAQ onBack={() => setScreen('profile')}/>;
+
+      // ── Tienda ────────────────────────────────────────────
+      case 'store':
+        return <ScreenStore
+          cart={storeCart} setCart={setStoreCart}
+          onBack={() => setScreen('dashboard')}
+          onCart={() => setScreen('store-cart')}
+        />;
+      case 'store-cart':
+        return <ScreenStoreCart
+          cart={storeCart} setCart={setStoreCart}
+          onBack={() => setScreen('store')}
+          onDelivery={(method) => {
+            setStoreDelivery(method);
+            setScreen(method === 'locker' ? 'store-pickup' : 'store-address');
+          }}
+        />;
+      case 'store-address':
+        return <ScreenStoreAddress
+          onBack={() => setScreen('store-cart')}
+          onConfirm={(addr) => { setStoreAddress(addr); setScreen('store-order'); }}
+        />;
+      case 'store-pickup':
+        return <ScreenStorePickup
+          onBack={() => setScreen('store-cart')}
+          onConfirm={(p) => { setStorePickup(p); setScreen('store-order'); }}
+        />;
+      case 'store-order':
+        return <ScreenStoreOrder
+          cart={storeCart}
+          delivery={storeDelivery}
+          address={storeAddress}
+          pickup={storePickup}
+          onBack={() => setScreen(storeDelivery === 'locker' ? 'store-pickup' : 'store-address')}
+          onPay={(t) => { setStoreTotal(t); setScreen('store-payment'); }}
+        />;
+      case 'store-payment':
+        return <ScreenStorePayment
+          total={storeTotal}
+          onBack={() => setScreen('store-order')}
+          onSuccess={() => setScreen('store-confirm')}
+        />;
+      case 'store-confirm':
+        return <ScreenStoreConfirm
+          cart={storeCart}
+          delivery={storeDelivery}
+          address={storeAddress}
+          pickup={storePickup}
+          onDone={() => { setStoreCart({}); setScreen('dashboard'); }}
+        />;
+
       default:
         return null;
     }
   };
 
-  const labels = {
-    'home-public': '01 Home público',
-    'venue':       '02 Sede',
-    'dashboard':   '03 Dashboard',
-    'book':        '04 Reserva',
-    'checkout':    '05 Resumen',
-    'stripe':      '06 Stripe',
-    'key':         '07 Llave',
-    'profile':     '08 Perfil',
-  };
+  const toolbarItems = [
+    { id: 'home-public',    label: '01 · Home' },
+    { id: 'venue',          label: '02 · Sede' },
+    { id: 'dashboard',      label: '03 · Dashboard' },
+    { id: 'book',           label: '04 · Reserva' },
+    { id: 'checkout',       label: '05 · Resumen' },
+    { id: 'stripe',         label: '06 · Stripe' },
+    { id: 'key',            label: '07 · Llave' },
+    { id: 'profile',        label: '08 · Perfil' },
+    { id: 'store',          label: '09 · Tienda' },
+    { id: 'store-cart',     label: '10 · Carrito' },
+    { id: 'store-address',  label: '11 · Dirección' },
+    { id: 'store-pickup',   label: '11 · Locker' },
+    { id: 'store-order',    label: '12 · Pedido' },
+    { id: 'store-payment',  label: '13 · Pago' },
+    { id: 'store-confirm',  label: '14 · Confirmado' },
+    { id: 'payment-add',    label: '+ Añadir tarjeta' },
+  ];
 
   return (
     <div style={{
@@ -114,8 +169,8 @@ function App() {
       padding: '24px 16px 40px', gap: 16,
       fontFamily: 'Archivo, system-ui, sans-serif',
     }}>
-      <Toolbar screen={screen} setScreen={setScreen} authed={isAuthed} setAuthed={setAuthed}/>
-      <div data-screen-label={labels[screen]}>
+      <Toolbar screen={screen} setScreen={setScreen} authed={isAuthed} setAuthed={setAuthed} items={toolbarItems}/>
+      <div data-screen-label={screen}>
         <Phone>
           {renderScreen()}
           {authWall && (
@@ -138,26 +193,14 @@ function App() {
   );
 }
 
-function Toolbar({ screen, setScreen, authed, setAuthed }) {
-  const items = [
-    { id: 'home-public', label: '01 · Home' },
-    { id: 'venue',       label: '02 · Sede' },
-    { id: 'dashboard',   label: '03 · Dashboard' },
-    { id: 'book',        label: '04 · Reserva' },
-    { id: 'checkout',    label: '05 · Resumen' },
-    { id: 'stripe',      label: '06 · Stripe' },
-    { id: 'key',         label: '07 · Llave' },
-    { id: 'profile',     label: '08 · Perfil' },
-    { id: 'store',       label: '09 · Tienda' },
-    { id: 'payment-add', label: '+ Añadir tarjeta' },
-  ];
+function Toolbar({ screen, setScreen, authed, setAuthed, items }) {
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
       <div style={{
         display: 'flex', gap: 6, padding: 6, borderRadius: 999,
         background: '#fff', border: '1px solid #E2E0D8',
         boxShadow: '0 4px 14px rgba(20,19,24,.06)',
-        flexWrap: 'wrap', justifyContent: 'center', maxWidth: 760,
+        flexWrap: 'wrap', justifyContent: 'center', maxWidth: 860,
       }}>
         {items.map(it => {
           const on = screen === it.id;
@@ -194,11 +237,11 @@ function Footer() {
     <div style={{
       fontFamily: 'Archivo, system-ui, sans-serif', fontSize: 11,
       color: '#6B6776', letterSpacing: '.14em', textTransform: 'uppercase',
-      fontWeight: 700, marginTop: 4, textAlign: 'center', maxWidth: 380,
+      fontWeight: 700, marginTop: 4, textAlign: 'center', maxWidth: 480,
     }}>
       POLEBOX · prototipo interactivo
       <div style={{ marginTop: 6, letterSpacing: 0, textTransform: 'none', fontWeight: 500, color: '#A19DAB' }}>
-        Explora como invitada → pulsa "Pagar" y aparece el muro de registro. Toggle arriba para simular sesión.
+        Flujo tienda: 09 Tienda → añade productos → Ver carrito → elige Locker o Domicilio → completa el pedido.
       </div>
     </div>
   );

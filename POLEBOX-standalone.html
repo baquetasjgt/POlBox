@@ -1658,6 +1658,7 @@ const Screen5Profile = ({ onBack, onLogout, onNav }) => {
         <Section title="Cuenta y pagos">
           <Row icon="card" title="Métodos de pago" sub="Mastercard terminada en 4242" to="payment-methods"/>
           <Row icon="history" title="Historial de reservas" sub="14 sesiones · desde oct 2025" to="history"/>
+          <Row icon="sparkle" title="Historial de pedidos" sub="5 pedidos · tienda" to="order-history"/>
         </Section>
 
         <Section title="Legal y seguridad">
@@ -2351,6 +2352,162 @@ const ScreenFAQ = ({ onBack }) => {
 Object.assign(window, {
   ScreenPaymentMethods, ScreenHistory, ScreenContract, ScreenKYC, ScreenSupport, ScreenFAQ,
 });
+
+// ─── Historial de pedidos (tienda) ──────────────────────────
+const ScreenOrderHistory = ({ onBack }) => {
+  const [open, setOpen] = React.useState(null);
+
+  const orders = [
+    { id: 'PB-ORD-00042', date: '12 dic 2025', delivery: 'locker', venueName: 'Salamanca', lockerId: 'L2', lockerCode: '7483', items: [{name:'Magnesio líquido',qty:2,price:8.50},{name:'Dry Hands',qty:1,price:12.00}], shipping: 0, state: 'entregado', method: 'Mastercard ••4242' },
+    { id: 'PB-ORD-00038', date: '4 dic 2025',  delivery: 'home',   addr: 'C/ Velázquez 42, Madrid', items: [{name:'Shorts pole',qty:1,price:28.00},{name:'Calcetines grip',qty:2,price:9.00}], shipping: 4.99, state: 'enviado', tracking: 'CE123456789ES', method: 'Apple Pay' },
+    { id: 'PB-ORD-00031', date: '21 nov 2025', delivery: 'locker', venueName: 'Chamberí',   lockerId: 'L1', lockerCode: '3921', items: [{name:'Tiza en polvo',qty:3,price:5.00},{name:'Rodilleras pole',qty:1,price:18.00}], shipping: 0, state: 'entregado', method: 'Mastercard ••4242' },
+    { id: 'PB-ORD-00024', date: '8 nov 2025',  delivery: 'home',   addr: 'C/ Velázquez 42, Madrid', items: [{name:'Top sin tirantes',qty:1,price:24.00}], shipping: 4.99, state: 'entregado', method: 'Visa ••0119' },
+    { id: 'PB-ORD-00019', date: '28 oct 2025', delivery: 'locker', venueName: 'Salamanca',  lockerId: 'L3', lockerCode: '5512', items: [{name:'Magnesio líquido',qty:1,price:8.50},{name:'Toalla microfibra',qty:1,price:12.00}], shipping: 0, state: 'entregado', method: 'Google Pay' },
+  ];
+
+  const fmt   = (n) => n.toFixed(2).replace('.', ',') + ' €';
+  const total = (o) => o.items.reduce((s, i) => s + i.price * i.qty, 0) + o.shipping;
+
+  const tone = (s) => ({
+    entregado: { bg: PB.successBg, fg: PB.success, label: 'Entregado' },
+    enviado:   { bg: PB.warnBg,    fg: PB.warn,    label: 'En camino' },
+    pendiente: { bg: PB.surface2,  fg: PB.ink3,    label: 'Pendiente' },
+  }[s] || { bg: PB.surface2, fg: PB.ink3, label: s });
+
+  const totalGastado = orders.reduce((s, o) => s + total(o), 0);
+
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
+        <ProfileHeader title="Historial de pedidos" onBack={onBack}/>
+
+        {/* Stats */}
+        <div style={{ padding: '4px 16px 16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {[
+              { k: 'Pedidos',       v: orders.length.toString() },
+              { k: 'Total gastado', v: fmt(totalGastado) },
+            ].map(s => (
+              <div key={s.k} style={{ padding: 12, borderRadius: 14, background: PB.surface, border: `1px solid ${PB.line}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>{s.k}</div>
+                <div style={{ fontFamily: s.k === 'Total gastado' ? PB.mono : PB.font, fontWeight: 800, fontSize: 18, marginTop: 2 }}>{s.v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Lista */}
+        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {orders.map((o) => {
+            const t = tone(o.state);
+            return (
+              <button key={o.id} onClick={() => setOpen(o)} style={{
+                display: 'flex', gap: 12, padding: 14, borderRadius: 16, background: PB.surface,
+                border: `1px solid ${PB.line}`, textAlign: 'left', alignItems: 'center',
+                cursor: 'pointer', fontFamily: PB.font, width: '100%',
+              }}>
+                {/* Icono entrega */}
+                <div style={{ width: 44, height: 44, borderRadius: 13, flexShrink: 0, display: 'grid', placeItems: 'center',
+                  background: o.delivery === 'locker' ? PB.mentaSoft : PB.surface2 }}>
+                  <Icon name={o.delivery === 'locker' ? 'bolt' : 'refresh'} size={20} color={PB.morado}/>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 12, color: PB.morado }}>{o.id}</span>
+                    <span style={{ padding: '2px 7px', borderRadius: 999, background: t.bg, color: t.fg, fontSize: 9, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' }}>{t.label}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: PB.ink3 }}>{o.date} · {o.delivery === 'locker' ? `Locker ${o.lockerId} · ${o.venueName}` : 'Envío a domicilio'}</div>
+                  <div style={{ fontSize: 12, color: PB.ink3, marginTop: 1 }}>
+                    {o.items.length} artículo{o.items.length !== 1 ? 's' : ''} · <span style={{ fontFamily: PB.mono, fontWeight: 700 }}>{fmt(total(o))}</span>
+                  </div>
+                </div>
+                <Icon name="chevron" size={16} color={PB.ink4}/>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <TabBar active="perfil"/>
+      {open && <OrderTicket order={open} onClose={() => setOpen(null)} fmt={fmt} total={total} tone={tone}/>}
+    </>
+  );
+};
+
+// ─── Modal detalle de pedido ──────────────────────────────────
+const OrderTicket = ({ order, onClose, fmt, total, tone }) => {
+  const o = order;
+  const t = tone(o.state);
+  return (
+    <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(20,13,62,.5)', zIndex: 100, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', backdropFilter: 'blur(4px)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: PB.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: '8px 20px 32px', maxHeight: '85%', overflowY: 'auto', boxShadow: '0 -20px 60px rgba(20,13,62,.2)' }}>
+        <div style={{ width: 44, height: 4, borderRadius: 999, background: PB.line, margin: '8px auto 20px' }}/>
+
+        {/* Cabecera */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div>
+            <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, color: PB.morado }}>{o.id}</div>
+            <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', marginTop: 2 }}>Detalle del pedido</div>
+          </div>
+          <span style={{ padding: '4px 10px', borderRadius: 999, background: t.bg, color: t.fg, fontSize: 11, fontWeight: 800 }}>{t.label}</span>
+        </div>
+
+        {/* Artículos */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 8 }}>Artículos</div>
+          {o.items.map((it, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: `1px solid ${PB.line}`, fontSize: 13, color: PB.ink2 }}>
+              <span>{it.name} ×{it.qty}</span>
+              <span style={{ fontFamily: PB.mono, fontWeight: 600 }}>{fmt(it.price * it.qty)}</span>
+            </div>
+          ))}
+          {o.shipping > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: `1px solid ${PB.line}`, fontSize: 13, color: PB.ink2 }}>
+              <span>Envío</span><span style={{ fontFamily: PB.mono, fontWeight: 600 }}>{fmt(o.shipping)}</span>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: `1px solid ${PB.line}` }}>
+            <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15 }}>Total</span>
+            <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 18 }}>{fmt(total(o))}</span>
+          </div>
+        </div>
+
+        {/* Entrega */}
+        <div style={{ padding: '14px', borderRadius: 16, background: o.delivery === 'locker' ? PB.mentaSoft : PB.warnBg, marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <Icon name={o.delivery === 'locker' ? 'bolt' : 'refresh'} size={16} color={PB.morado}/>
+            <span style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>
+              {o.delivery === 'locker' ? `Locker ${o.lockerId} · POLEBOX ${o.venueName}` : `Envío a domicilio · ${o.addr}`}
+            </span>
+          </div>
+          {o.delivery === 'locker' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12, color: PB.ink3 }}>Código de apertura:</span>
+              <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 20, color: PB.morado, letterSpacing: '.12em' }}>{o.lockerCode}</span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12, color: PB.ink3 }}>Seguimiento:</span>
+              <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, color: PB.morado }}>{o.tracking}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Pago */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: PB.surface2, marginBottom: 14, fontSize: 13 }}>
+          <span style={{ color: PB.ink3 }}>Método de pago</span>
+          <span style={{ fontFamily: PB.font, fontWeight: 700, color: PB.ink }}>{o.method}</span>
+        </div>
+
+        <button onClick={onClose} style={{ width: '100%', padding: '14px', borderRadius: 14, border: `1px solid ${PB.line}`, background: PB.surface, fontFamily: PB.font, fontWeight: 700, fontSize: 15, color: PB.ink, cursor: 'pointer' }}>
+          Cerrar
+        </button>
+      </div>
+    </div>
+  );
+};
+
+Object.assign(window, { ScreenOrderHistory });
 
 </script>
 <script type="text/babel">
@@ -3946,6 +4103,8 @@ function App() {
         return <ScreenSupport onBack={() => setScreen('profile')}/>;
       case 'faq':
         return <ScreenFAQ onBack={() => setScreen('profile')}/>;
+      case 'order-history':
+        return <ScreenOrderHistory onBack={() => setScreen('profile')}/>;
 
       // ── Tienda ────────────────────────────────────────────
       case 'store':
@@ -4019,6 +4178,7 @@ function App() {
     { id: 'store-payment',  label: '13 · Pago' },
     { id: 'store-confirm',  label: '14 · Confirmado' },
     { id: 'payment-add',    label: '+ Añadir tarjeta' },
+    { id: 'order-history',  label: '+ Pedidos' },
   ];
 
   return (

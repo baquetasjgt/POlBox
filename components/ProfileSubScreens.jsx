@@ -1,0 +1,662 @@
+// POLEBOX — Sub-pantallas del Perfil
+// Header reutilizable + 6 vistas: payment-methods, history, contract, kyc, support, faq
+
+const ProfileHeader = ({ title, onBack, right }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 16px 8px', position: 'relative' }}>
+    <button onClick={onBack} style={{ position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+      <Icon name="back" size={18}/>
+    </button>
+    <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 17, letterSpacing: '-0.01em', margin: 0 }}>{title}</h3>
+    {right && <div style={{ position: 'absolute', right: 16 }}>{right}</div>}
+  </div>
+);
+
+// ─── Métodos de pago ─────────────────────────────────────────
+const ScreenPaymentMethods = ({ onBack, onAdd }) => {
+  const [defId, setDefId] = React.useState('mc');
+  const cards = [
+    { id: 'mc', brand: 'Mastercard', last: '4242', exp: '12/28', color: '#1A1F36' },
+    { id: 'visa', brand: 'Visa',     last: '0119', exp: '08/27', color: '#1A1F71' },
+  ];
+  const Brand = ({ b }) => b === 'Mastercard'
+    ? <div style={{ display: 'flex' }}><div style={{ width: 18, height: 18, borderRadius: 999, background: '#EB001B' }}/><div style={{ width: 18, height: 18, borderRadius: 999, background: '#F79E1B', marginLeft: -8, mixBlendMode: 'multiply' }}/></div>
+    : <div style={{ fontFamily: 'system-ui', fontWeight: 900, fontSize: 14, color: '#fff', letterSpacing: '.04em', fontStyle: 'italic' }}>VISA</div>;
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
+        <ProfileHeader title="Métodos de pago" onBack={onBack}/>
+        <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {cards.map(c => (
+            <div key={c.id} style={{ borderRadius: 18, padding: 18, background: `linear-gradient(135deg, ${c.color}, #2c1d6b)`, color: '#fff', position: 'relative', boxShadow: '0 10px 24px rgba(20,19,24,.18)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Brand b={c.brand}/>
+                {defId === c.id && <span style={{ padding: '3px 9px', borderRadius: 999, background: PB.menta, color: PB.moradoInk, fontSize: 10, fontWeight: 800, letterSpacing: '.08em' }}>POR DEFECTO</span>}
+              </div>
+              <div style={{ marginTop: 28, fontFamily: PB.mono, fontWeight: 700, fontSize: 18, letterSpacing: '.16em' }}>•••• •••• •••• {c.last}</div>
+              <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, opacity: .85 }}>
+                <span>Caduca {c.exp}</span>
+                <button onClick={() => setDefId(c.id)} style={{ background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,.3)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>{defId === c.id ? 'Editar' : 'Por defecto'}</button>
+              </div>
+            </div>
+          ))}
+          <button onClick={onAdd} style={{ marginTop: 4, padding: '16px', borderRadius: 16, border: `1.5px dashed ${PB.lineStrong}`, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.morado, cursor: 'pointer' }}>
+            <Icon name="plus" size={18}/> Añadir método de pago
+          </button>
+          <div style={{ marginTop: 12, padding: 14, borderRadius: 14, background: PB.surface2, fontSize: 12, color: PB.ink3, display: 'flex', gap: 10 }}>
+            <Icon name="shield" size={16} color={PB.morado}/>
+            <span>Tus datos se guardan cifrados en <strong style={{ color: PB.ink2, fontWeight: 700 }}>Stripe</strong>. POLEBOX nunca ve tu número completo.</span>
+          </div>
+        </div>
+      </div>
+      <TabBar active="perfil"/>
+    </>
+  );
+};
+
+// ─── Historial de reservas ───────────────────────────────────
+const ScreenHistory = ({ onBack }) => {
+  const [open, setOpen] = React.useState(null); // selected booking
+  const items = [
+    { id: 'PB-2025-12-018', d: 'JUE', n: 18, m: 'DIC', dateLong: 'Jueves, 18 dic 2025',  hours: '18:00 – 19:30', box: 'BOX 1 · Industrial', sede: 'Madrid · Salamanca', dur: '90 min', price: '20,00 €', subtotal: '16,53 €', tax: '3,47 €', total: '20,00 €', method: 'Mastercard ••4242', state: 'upcoming' },
+    { id: 'PB-2025-12-009', d: 'MAR', n: 9,  m: 'DIC', dateLong: 'Martes, 9 dic 2025',   hours: '19:00 – 20:00', box: 'BOX 2 · Neón',       sede: 'Madrid · Salamanca', dur: '60 min', price: '15,00 €', subtotal: '12,40 €', tax: '2,60 €', total: '15,00 €', method: 'Mastercard ••4242', state: 'done' },
+    { id: 'PB-2025-12-006', d: 'SÁB', n: 6,  m: 'DIC', dateLong: 'Sábado, 6 dic 2025',   hours: '11:00 – 13:00', box: 'BOX 1 · Industrial', sede: 'Madrid · Chamberí',  dur: '120 min', price: '25,00 €', subtotal: '20,66 €', tax: '4,34 €', total: '25,00 €', method: 'Visa ••0119',       state: 'done' },
+    { id: 'PB-2025-11-028', d: 'JUE', n: 28, m: 'NOV', dateLong: 'Jueves, 28 nov 2025', hours: '20:00 – 21:00', box: 'BOX 3 · Espejo',     sede: 'Madrid · Salamanca', dur: '60 min',  price: '15,00 €', subtotal: '12,40 €', tax: '2,60 €', total: '15,00 €', method: 'Mastercard ••4242', state: 'done' },
+    { id: 'PB-2025-11-018', d: 'LUN', n: 18, m: 'NOV', dateLong: 'Lunes, 18 nov 2025',  hours: '17:00 – 18:30', box: 'BOX 1 · Industrial', sede: 'Madrid · Salamanca', dur: '90 min',  price: '20,00 €', subtotal: '16,53 €', tax: '3,47 €', total: '20,00 €', method: 'Mastercard ••4242', state: 'cancelled' },
+    { id: 'PB-2025-11-014', d: 'JUE', n: 14, m: 'NOV', dateLong: 'Jueves, 14 nov 2025', hours: '18:00 – 19:00', box: 'BOX 2 · Neón',       sede: 'Madrid · Chamberí',  dur: '60 min',  price: '15,00 €', subtotal: '12,40 €', tax: '2,60 €', total: '15,00 €', method: 'Visa ••0119',       state: 'done' },
+  ];
+  const tone = (s) => s === 'upcoming' ? { bg: PB.successBg, fg: PB.success, label: 'Próxima' }
+                    : s === 'cancelled' ? { bg: PB.dangerBg, fg: PB.danger, label: 'Cancelada' }
+                    : { bg: PB.surface2, fg: PB.ink3, label: 'Completada' };
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
+        <ProfileHeader title="Historial de reservas" onBack={onBack}/>
+        <div style={{ padding: '4px 16px 12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {[
+              { k: 'Sesiones', v: '14' }, { k: 'Horas totales', v: '18,5' },
+            ].map(s => (
+              <div key={s.k} style={{ padding: 12, borderRadius: 14, background: PB.surface, border: `1px solid ${PB.line}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>{s.k}</div>
+                <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, marginTop: 2 }}>{s.v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {items.map((it, i) => {
+            const t = tone(it.state);
+            return (
+              <button key={i} onClick={() => setOpen(it)} style={{
+                display: 'flex', gap: 12, padding: 12, borderRadius: 14, background: PB.surface,
+                border: `1px solid ${PB.line}`, textAlign: 'left', alignItems: 'center',
+                cursor: 'pointer', fontFamily: PB.font,
+              }}>
+                <div style={{ width: 52, padding: '8px 0', borderRadius: 12, background: PB.morado, color: '#fff', textAlign: 'center', flexShrink: 0 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', opacity: .8 }}>{it.d}</div>
+                  <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, lineHeight: 1 }}>{it.n}</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', opacity: .8, marginTop: 2 }}>{it.m}</div>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14 }}>{it.box}</div>
+                  <div style={{ fontSize: 12, color: PB.ink3 }}>{it.sede}</div>
+                  <div style={{ fontSize: 12, color: PB.ink3, marginTop: 1 }}>{it.dur} · <span style={{ fontFamily: PB.mono, fontWeight: 700 }}>{it.price}</span></div>
+                  <span style={{ display: 'inline-block', marginTop: 6, padding: '2px 8px', borderRadius: 999, background: t.bg, color: t.fg, fontSize: 10, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>{t.label}</span>
+                </div>
+                <Icon name="chevron" size={16} color={PB.ink4}/>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <TabBar active="perfil"/>
+      {open && <BookingTicket booking={open} onClose={() => setOpen(null)}/>}
+    </>
+  );
+};
+
+// ─── Booking ticket modal ────────────────────────────────────
+const BookingTicket = ({ booking, onClose }) => {
+  const [downloading, setDownloading] = React.useState(false);
+  const [downloaded, setDownloaded] = React.useState(false);
+  const b = booking;
+  const stateTone = b.state === 'upcoming' ? { bg: PB.successBg, fg: PB.success, label: 'Próxima · pagada' }
+                  : b.state === 'cancelled' ? { bg: PB.dangerBg, fg: PB.danger, label: 'Cancelada · reembolsada' }
+                  : { bg: PB.mentaSoft, fg: PB.moradoInk, label: 'Completada' };
+
+  const handleDownload = () => {
+    if (downloading || downloaded) return;
+    setDownloading(true);
+    setTimeout(() => { setDownloading(false); setDownloaded(true); }, 1400);
+    setTimeout(() => setDownloaded(false), 2400);
+  };
+
+  // QR pseudo-grid (deterministic from id)
+  const qrCells = React.useMemo(() => {
+    const seed = b.id.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+    const N = 21;
+    const out = [];
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      // finder squares (corners)
+      const inFinder = (x,y) => (x < 7 && y < 7) || (x > N-8 && y < 7) || (x < 7 && y > N-8);
+      if (inFinder(x,y)) {
+        const fx = x < 7 ? x : N-1-x;
+        const fy = y < 7 ? y : N-1-y;
+        const ring = (fx === 0 || fx === 6 || fy === 0 || fy === 6);
+        const inner = (fx >= 2 && fx <= 4 && fy >= 2 && fy <= 4);
+        out.push(ring || inner ? 1 : 0);
+      } else {
+        out.push(((x*7 + y*13 + seed) % 11) % 3 === 0 ? 1 : 0);
+      }
+    }
+    return out;
+  }, [b.id]);
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 80,
+      background: 'rgba(20,19,24,.55)', backdropFilter: 'blur(4px)',
+      display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+      animation: 'pb-fade 220ms ease-out',
+    }}>
+      <style>{`
+        @keyframes pb-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pb-slideup { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pb-spin { to { transform: rotate(360deg); } }
+      `}</style>
+      <div onClick={onClose} style={{ flex: 1, cursor: 'pointer' }}/>
+      <div style={{
+        position: 'relative', maxHeight: '92%', overflowY: 'auto',
+        padding: '0 14px 14px', animation: 'pb-slideup 320ms cubic-bezier(.2,.7,.2,1)',
+      }}>
+        {/* Close handle */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
+          <div style={{ width: 44, height: 5, borderRadius: 999, background: 'rgba(255,255,255,.6)' }}/>
+        </div>
+
+        {/* Ticket */}
+        <div style={{ position: 'relative', filter: 'drop-shadow(0 18px 30px rgba(20,19,24,.25))' }}>
+          <TicketShape>
+            {/* Ticket header — morado strip */}
+            <div style={{
+              padding: '20px 22px 16px', background: PB.morado, color: '#fff',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+            }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', opacity: .75 }}>RECIBO</div>
+                <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 22, letterSpacing: '-.01em', marginTop: 4 }}>POLEBOX</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', opacity: .75 }}>Nº RESERVA</div>
+                <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, marginTop: 4 }}>{b.id}</div>
+              </div>
+            </div>
+
+            {/* Estado */}
+            <div style={{ padding: '14px 22px 4px' }}>
+              <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: 999, background: stateTone.bg, color: stateTone.fg, fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>{stateTone.label}</span>
+            </div>
+
+            {/* Detalle */}
+            <div style={{ padding: '12px 22px 18px' }}>
+              <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 22, letterSpacing: '-.01em', margin: '0 0 4px' }}>{b.box}</h3>
+              <div style={{ fontSize: 13, color: PB.ink3 }}>{b.sede}</div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }}>
+                <Detail label="Fecha" value={b.dateLong}/>
+                <Detail label="Horario" value={b.hours} mono/>
+                <Detail label="Duración" value={b.dur}/>
+                <Detail label="Aforo" value="2 personas"/>
+              </div>
+            </div>
+
+            {/* Perforación */}
+            <Perforation/>
+
+            {/* Línea de items */}
+            <div style={{ padding: '16px 22px 8px' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 10 }}>Concepto</div>
+              <Line label={`${b.box}`} sub={`${b.dur} · ${b.hours}`} value={b.price}/>
+              <Line label="Subtotal" value={b.subtotal} dim/>
+              <Line label="IVA (21 %)" value={b.tax} dim/>
+              <div style={{ height: 1, background: PB.line, margin: '10px 0' }}/>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 16 }}>Total</span>
+                <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 22, color: PB.ink, letterSpacing: '-.01em' }}>{b.total}</span>
+              </div>
+              <div style={{ marginTop: 10, fontSize: 12, color: PB.ink3, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon name="card" size={14} color={PB.ink3}/> Pagado con {b.method}
+              </div>
+            </div>
+
+            {/* Perforación */}
+            <Perforation/>
+
+            {/* QR */}
+            <div style={{ padding: '18px 22px 22px', display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div style={{
+                width: 96, height: 96, padding: 6, background: '#fff', borderRadius: 10,
+                border: `1px solid ${PB.line}`,
+                display: 'grid', gridTemplateColumns: 'repeat(21, 1fr)', gridTemplateRows: 'repeat(21, 1fr)', gap: 0,
+              }}>
+                {qrCells.map((c, i) => (
+                  <div key={i} style={{ background: c ? PB.ink : 'transparent' }}/>
+                ))}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Verificación</div>
+                <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, marginTop: 4, color: PB.ink2 }}>Muestra este QR si el equipo de soporte te lo pide.</div>
+                <div style={{ fontFamily: PB.mono, fontSize: 10, color: PB.ink3, marginTop: 6, wordBreak: 'break-all' }}>{b.id}-{b.n}-{b.m}</div>
+              </div>
+            </div>
+          </TicketShape>
+        </div>
+
+        {/* Acciones */}
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button onClick={handleDownload} disabled={downloading} style={{
+            width: '100%', padding: '16px', borderRadius: 14, border: 0,
+            background: downloaded ? PB.success : PB.ink, color: '#fff',
+            fontFamily: PB.font, fontWeight: 700, fontSize: 15, letterSpacing: '-.005em',
+            cursor: downloading ? 'wait' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            transition: 'all 220ms cubic-bezier(.2,.7,.2,1)',
+            boxShadow: '0 6px 18px rgba(20,19,24,.25)',
+          }}>
+            {downloading ? (<>
+              <span style={{ width: 16, height: 16, borderRadius: 999, border: '2px solid rgba(255,255,255,.35)', borderTopColor: '#fff', animation: 'pb-spin 700ms linear infinite' }}/>
+              Generando PDF…
+            </>) : downloaded ? (<>
+              <Icon name="check" size={18} color="#fff"/>
+              Factura guardada
+            </>) : (<>
+              <Icon name="doc" size={18} color="#fff"/>
+              Descargar factura
+            </>)}
+          </button>
+          {b.state === 'upcoming' && (
+            <button style={{
+              width: '100%', padding: '14px', borderRadius: 14, border: `1px solid ${PB.line}`,
+              background: PB.surface, color: PB.danger,
+              fontFamily: PB.font, fontWeight: 700, fontSize: 14, cursor: 'pointer',
+            }}>Cancelar reserva</button>
+          )}
+          <button onClick={onClose} style={{
+            width: '100%', padding: '12px', borderRadius: 14, border: 0,
+            background: 'transparent', color: '#fff',
+            fontFamily: PB.font, fontWeight: 700, fontSize: 14, cursor: 'pointer',
+          }}>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Ticket shape: white card with scalloped notches (perforations are inside as <Perforation/>)
+const TicketShape = ({ children }) => (
+  <div style={{
+    position: 'relative', background: PB.surface, borderRadius: 18, overflow: 'hidden',
+    boxShadow: '0 1px 0 rgba(0,0,0,.04)',
+  }}>{children}</div>
+);
+
+// Perforation row: dashed line + small notches at edges
+const Perforation = () => (
+  <div style={{ position: 'relative', height: 14 }}>
+    <div style={{
+      position: 'absolute', left: -10, top: '50%', transform: 'translateY(-50%)',
+      width: 20, height: 20, borderRadius: 999, background: '#39283e',
+    }}/>
+    <div style={{
+      position: 'absolute', right: -10, top: '50%', transform: 'translateY(-50%)',
+      width: 20, height: 20, borderRadius: 999, background: '#39283e',
+    }}/>
+    <div style={{
+      position: 'absolute', left: 16, right: 16, top: '50%',
+      borderTop: `2px dashed ${PB.line}`,
+    }}/>
+  </div>
+);
+
+const Detail = ({ label, value, mono }) => (
+  <div>
+    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>{label}</div>
+    <div style={{ fontFamily: mono ? PB.mono : PB.font, fontWeight: 700, fontSize: 14, color: PB.ink, marginTop: 3 }}>{value}</div>
+  </div>
+);
+
+const Line = ({ label, sub, value, dim }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '4px 0' }}>
+    <div style={{ minWidth: 0, paddingRight: 10 }}>
+      <div style={{ fontFamily: PB.font, fontWeight: dim ? 500 : 700, fontSize: 13, color: dim ? PB.ink3 : PB.ink }}>{label}</div>
+      {sub && <div style={{ fontSize: 11, color: PB.ink3, marginTop: 1 }}>{sub}</div>}
+    </div>
+    <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 14, color: dim ? PB.ink3 : PB.ink, whiteSpace: 'nowrap' }}>{value}</div>
+  </div>
+);
+
+// ─── Mi contrato y normativa ─────────────────────────────────
+const ScreenContract = ({ onBack }) => {
+  const sections = [
+    {
+      emoji: '🛑',
+      title: 'Protege la barra',
+      subtitle: 'Es tu compañera de baile',
+      tone: PB.danger, toneBg: PB.dangerBg,
+      rules: [
+        { t: 'Sin anillos, pulseras, relojes ni piercings corporales', s: 'Pueden rayar el metal — una barra rayada es peligrosa y causa cortes.' },
+        { t: 'Prohibida la resina (pega) y las ceras', s: 'Solo magnesio líquido o grips específicos de pole (Dry Hands, Monkey Hands…).' },
+        { t: 'Limpia la barra al terminar', s: 'Usa el bote de alcohol y la bayeta de microfibra de tu box.' },
+      ],
+    },
+    {
+      emoji: '🧴',
+      title: 'Preparación y calzado',
+      tone: PB.morado, toneBg: PB.info_bg || 'rgba(72,35,128,.08)',
+      rules: [
+        { t: 'Cero cremas corporales o aceites el día de tu entrenamiento', s: 'Hacen que la barra resbale y comprometen tu seguridad y la de la siguiente persona.' },
+        { t: 'Calzado: descalza, calcetines o tacones específicos de pole (tipo Pleasers)', s: 'Prohibido el calzado de calle en la zona de baile y colchonetas.' },
+      ],
+    },
+    {
+      emoji: '⏱️',
+      title: 'Tu tiempo es tuyo',
+      subtitle: 'Pero el del siguiente también',
+      tone: PB.warn, toneBg: PB.warnBg,
+      rules: [
+        { t: 'Tu código de acceso expira al finalizar tu hora', s: 'Recibirás un aviso 10 minutos antes en la app.' },
+        { t: 'Tarifa Flex: 0,20 €/min extra', s: 'Si nadie espera y decides alargar, se aplica automáticamente hasta que abras la puerta para salir.' },
+        { t: 'Reserva 5 minutos del final para limpiar y recoger', s: 'Limpia la barra, recoge tus cosas y cámbiate antes de salir.' },
+      ],
+    },
+    {
+      emoji: '🧹',
+      title: 'Higiene y respeto',
+      tone: PB.menta_deep || PB.success, toneBg: PB.successBg,
+      rules: [
+        { t: 'No dejes botellas, pañuelos ni restos de magnesio en el suelo', s: 'Usa la papelera del box.' },
+        { t: 'Apaga luces, aire acondicionado y altavoz Bluetooth antes de salir', s: 'Desde la app o los interruptores del box.' },
+      ],
+    },
+    {
+      emoji: '🔒',
+      title: 'Seguridad',
+      subtitle: 'Tolerancia cero',
+      tone: PB.danger, toneBg: PB.dangerBg,
+      rules: [
+        { t: 'Acceso personal e intransferible', s: 'Tu llave digital es solo tuya. Permitir acceso a personas no registradas conlleva expulsión inmediata y bloqueo de la cuenta.' },
+        { t: 'Sin cámaras dentro de los boxes privados', s: 'Por tu privacidad. El pasillo y el acceso principal sí están videovigilados 24/7.' },
+        { t: 'Botón rojo de S.O.S. en la app', s: 'Si hay un accidente o la puerta no abre, púlsalo y conectamos contigo en menos de 60 segundos.' },
+      ],
+    },
+  ];
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
+        <ProfileHeader title="Mi contrato y normativa" onBack={onBack}
+          right={<button style={{ background: 'transparent', border: 0, color: PB.morado, fontFamily: PB.font, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>PDF</button>}/>
+        <div style={{ margin: '6px 16px 16px', padding: 16, borderRadius: 18, background: `linear-gradient(160deg, ${PB.surface} 0%, ${PB.mentaSoft} 200%)`, border: `1px solid ${PB.line}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 999, background: PB.successBg, color: PB.success, display: 'grid', placeItems: 'center' }}>
+              <Icon name="check" size={20}/>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 16 }}>Descargo firmado</div>
+              <div style={{ fontSize: 12, color: PB.ink3 }}>14 oct 2025 · 10:42h · IP 81.34.•••.••</div>
+            </div>
+          </div>
+        </div>
+
+        {sections.map((sec, si) => (
+          <div key={si} style={{ margin: '0 16px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 4px 8px' }}>
+              <div style={{
+                width: 30, height: 30, borderRadius: 10, background: sec.toneBg,
+                display: 'grid', placeItems: 'center', fontSize: 16, lineHeight: 1,
+              }}>{sec.emoji}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15, letterSpacing: '-.005em', color: PB.ink }}>
+                  <span style={{ color: PB.ink3, fontWeight: 700, marginRight: 6 }}>{si + 1}.</span>{sec.title}
+                </div>
+                {sec.subtitle && (
+                  <div style={{ fontSize: 11, color: PB.ink3, fontStyle: 'italic', marginTop: 1 }}>{sec.subtitle}</div>
+                )}
+              </div>
+            </div>
+            <div style={{ borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}`, overflow: 'hidden' }}>
+              {sec.rules.map((r, ri) => (
+                <div key={ri} style={{ display: 'flex', gap: 12, padding: '14px', borderTop: ri ? `1px solid ${PB.line}` : 0 }}>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 999, background: sec.toneBg, color: sec.tone,
+                    display: 'grid', placeItems: 'center', flexShrink: 0, marginTop: 1,
+                  }}>
+                    <Icon name="check" size={13} color={sec.tone}/>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13.5, color: PB.ink, lineHeight: 1.35 }}>{r.t}</div>
+                    <div style={{ fontSize: 12, color: PB.ink3, marginTop: 3, lineHeight: 1.45 }}>{r.s}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        <div style={{ padding: '4px 20px 0', fontSize: 11, color: PB.ink3, lineHeight: 1.5 }}>
+          La normativa completa y el contrato están disponibles en PDF. Última actualización: 1 oct 2025.
+        </div>
+      </div>
+      <TabBar active="perfil"/>
+    </>
+  );
+};
+
+// ─── Actualizar DNI / selfie ─────────────────────────────────
+const ScreenKYC = ({ onBack }) => {
+  const Step = ({ n, icon, title, sub, state }) => {
+    const isOk = state === 'ok', isPend = state === 'pending';
+    return (
+      <div style={{ display: 'flex', gap: 14, padding: 14, borderRadius: 16, background: PB.surface, border: `1px solid ${isOk ? PB.success : PB.line}`, alignItems: 'center' }}>
+        <div style={{ width: 44, height: 44, borderRadius: 14, background: isOk ? PB.successBg : PB.surface2, color: isOk ? PB.success : PB.morado, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          <Icon name={isOk ? 'check' : icon} size={20} color={isOk ? PB.success : PB.morado}/>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Paso {n}</div>
+          <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14 }}>{title}</div>
+          <div style={{ fontSize: 12, color: isOk ? PB.success : PB.ink3, marginTop: 2 }}>{sub}</div>
+        </div>
+        {isPend && <Icon name="chevron" size={18} color={PB.ink4}/>}
+      </div>
+    );
+  };
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 130 }}>
+        <ProfileHeader title="Verificación de identidad" onBack={onBack}/>
+        <div style={{ margin: '6px 16px 14px', padding: 16, borderRadius: 18, background: PB.morado, color: '#fff', position: 'relative', overflow: 'hidden' }}>
+          <Eyebrow color={PB.menta}>Por qué te lo pedimos</Eyebrow>
+          <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 17, marginTop: 8, lineHeight: 1.3 }}>
+            Para entrar sola al local con tu llave digital, tu identidad debe estar verificada.
+          </div>
+          <div style={{ fontSize: 12, opacity: .8, marginTop: 8 }}>El proceso es manual y se revisa en menos de 24h.</div>
+        </div>
+        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Step n="1" icon="card"    title="Foto del DNI · anverso"  sub="Subido el 14 oct 2025" state="ok"/>
+          <Step n="2" icon="card"    title="Foto del DNI · reverso"  sub="Subido el 14 oct 2025" state="ok"/>
+          <Step n="3" icon="profile" title="Selfie con DNI en mano"  sub="Pendiente · sube una nueva si tu DNI ha caducado" state="pending"/>
+        </div>
+        <div style={{ padding: '14px 16px 0' }}>
+          <Button full icon="camera" style={{ padding: '16px', fontSize: 15 }}>
+            Hacer selfie ahora
+          </Button>
+          <button style={{ marginTop: 8, width: '100%', padding: '12px', borderRadius: 14, border: `1px solid ${PB.line}`, background: PB.surface, fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink2, cursor: 'pointer' }}>
+            Subir desde galería
+          </button>
+        </div>
+        <div style={{ margin: '14px 16px 0', padding: 12, borderRadius: 12, background: PB.surface2, fontSize: 11.5, color: PB.ink3, lineHeight: 1.45, display: 'flex', gap: 10 }}>
+          <Icon name="shield" size={14} color={PB.morado}/>
+          Tus documentos se cifran y se borran automáticamente a los 6 meses tras la baja.
+        </div>
+      </div>
+      <TabBar active="perfil"/>
+    </>
+  );
+};
+
+// ─── Ayuda y soporte técnico ─────────────────────────────────
+const ScreenSupport = ({ onBack }) => {
+  const channels = [
+    { icon: 'chat',  title: 'Chat en directo',   sub: 'Lun–Dom · 9–22h · Tiempo medio 4 min', cta: 'Abrir chat', primary: true },
+    { icon: 'phone', title: 'Llamada de emergencia', sub: 'Solo si estás dentro del box ahora mismo', cta: '+34 900 000 000', emergency: true },
+    { icon: 'help',  title: 'Email',              sub: 'hola@polebox.es · respuesta <24h', cta: 'Escribir' },
+  ];
+  const tickets = [
+    { id: '#3201', t: 'No se abrió la puerta del BOX 1', state: 'Resuelto', when: 'Ayer' },
+    { id: '#3144', t: 'Cobro duplicado en reserva',       state: 'Reembolsado', when: '12 nov' },
+  ];
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
+        <ProfileHeader title="Ayuda y soporte" onBack={onBack}/>
+        <div style={{ padding: '4px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {channels.map((c, i) => (
+            <button key={i} style={{
+              display: 'flex', gap: 14, alignItems: 'center', padding: 14, borderRadius: 16,
+              border: `1px solid ${c.emergency ? PB.danger : (c.primary ? PB.morado : PB.line)}`,
+              background: c.emergency ? PB.dangerBg : (c.primary ? PB.morado : PB.surface),
+              color: c.emergency ? PB.danger : (c.primary ? '#fff' : PB.ink),
+              cursor: 'pointer', textAlign: 'left',
+            }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14,
+                background: c.primary ? 'rgba(255,255,255,.15)' : (c.emergency ? '#fff' : PB.surface2),
+                display: 'grid', placeItems: 'center', flexShrink: 0,
+              }}>
+                <Icon name={c.icon} size={20} color={c.emergency ? PB.danger : (c.primary ? '#fff' : PB.morado)}/>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 15 }}>{c.title}</div>
+                <div style={{ fontSize: 12, opacity: c.primary ? .85 : 1, color: c.primary ? 'rgba(255,255,255,.85)' : (c.emergency ? PB.danger : PB.ink3), marginTop: 2 }}>{c.sub}</div>
+              </div>
+              <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 12, padding: '6px 10px', borderRadius: 999,
+                background: c.primary ? 'rgba(255,255,255,.18)' : (c.emergency ? '#fff' : PB.morado),
+                color: c.primary ? '#fff' : (c.emergency ? PB.danger : '#fff'),
+              }}>{c.cta}</div>
+            </button>
+          ))}
+        </div>
+        <div style={{ padding: '20px 20px 6px', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Tus tickets</div>
+        <div style={{ margin: '0 16px', borderRadius: 16, background: PB.surface, border: `1px solid ${PB.line}`, overflow: 'hidden' }}>
+          {tickets.map((t, i) => (
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px', borderTop: i ? `1px solid ${PB.line}` : 0 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: PB.successBg, color: PB.success, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <Icon name="check" size={16}/>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13.5 }}>{t.t}</div>
+                <div style={{ fontSize: 11, color: PB.ink3, marginTop: 2 }}><span style={{ fontFamily: PB.mono, fontWeight: 700 }}>{t.id}</span> · {t.state} · {t.when}</div>
+              </div>
+              <Icon name="chevron" size={16} color={PB.ink4}/>
+            </div>
+          ))}
+        </div>
+      </div>
+      <TabBar active="perfil"/>
+    </>
+  );
+};
+
+// ─── Preguntas frecuentes ────────────────────────────────────
+const ScreenFAQ = ({ onBack }) => {
+  const [open, setOpen] = React.useState(0);
+  const cats = ['Reservas', 'Acceso al box', 'Pagos', 'Normativa'];
+  const [cat, setCat] = React.useState(0);
+  const data = [
+    [
+      { q: '¿Puedo cancelar una reserva?', a: 'Sí, hasta 4 horas antes del inicio sin coste. Después se cobra el 50%.' },
+      { q: '¿Cuánto dura una sesión?', a: 'Eliges entre 45, 60, 90 o 120 minutos. Si la sala sigue libre al terminar, puedes activar la tarifa Flex (0,20 €/min) y seguir entrenando.' },
+      { q: '¿Puedo reservar para alguien más?', a: 'Solo el titular de la cuenta puede entrar al box. Si vais dos, cada una debe tener cuenta verificada.' },
+    ],
+    [
+      { q: '¿Qué pasa si llego antes de mi hora?', a: 'La llave digital se activa 5 minutos antes del inicio. Antes de ese momento la puerta no se abrirá.' },
+      { q: 'Mi móvil se ha quedado sin batería', a: 'Llama al teléfono de emergencia desde otro móvil; soporte te abre remotamente.' },
+      { q: '¿Puedo cambiar de box una vez dentro?', a: 'No. La llave solo abre el box reservado. Si está roto algo, contacta soporte y te reubicamos sin coste.' },
+    ],
+    [
+      { q: '¿Qué métodos de pago aceptáis?', a: 'Apple Pay, Google Pay, tarjeta (Visa/Mastercard/Amex) y Bizum. Todo procesado por Stripe.' },
+      { q: '¿Cuándo se cobra la reserva?', a: 'En el momento de confirmarla. Si cancelas a tiempo, se devuelve íntegra en 3-5 días.' },
+      { q: '¿Hay bonos de varias sesiones?', a: 'Próximamente — bonos de 5 y 10 sesiones con descuento del 10-15%.' },
+    ],
+    [
+      { q: '¿Hay aforo máximo?', a: 'Sí, 2 personas por box (excepto BOX 3 Espejo, máx. 1).' },
+      { q: '¿Puedo grabar?', a: 'Solo a ti misma. Está prohibido grabar a otras personas sin su consentimiento.' },
+      { q: '¿Aceites o magnesio?', a: 'Magnesio sí — lo vendemos en máquina expendedora del pasillo. Aceites y cremas: prohibidos, dañan la barra.' },
+    ],
+  ];
+  const list = data[cat];
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
+        <ProfileHeader title="Preguntas frecuentes" onBack={onBack}/>
+        <div style={{ padding: '4px 16px 4px' }}>
+          <div style={{ position: 'relative' }}>
+            <input placeholder="Busca una pregunta…" style={{
+              width: '100%', boxSizing: 'border-box', padding: '12px 14px 12px 40px',
+              borderRadius: 14, border: `1px solid ${PB.line}`, background: PB.surface,
+              fontFamily: PB.font, fontSize: 14, outline: 'none',
+            }}/>
+            <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}>
+              <Icon name="help" size={16} color={PB.ink3}/>
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: '12px 16px 4px', display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
+          {cats.map((c, i) => {
+            const on = i === cat;
+            return (
+              <button key={c} onClick={() => { setCat(i); setOpen(0); }} style={{
+                flexShrink: 0, padding: '8px 14px', borderRadius: 999, border: `1px solid ${on ? PB.morado : PB.line}`,
+                background: on ? PB.morado : PB.surface, color: on ? '#fff' : PB.ink2,
+                fontFamily: PB.font, fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
+              }}>{c}</button>
+            );
+          })}
+        </div>
+        <div style={{ margin: '10px 16px', borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}`, overflow: 'hidden' }}>
+          {list.map((it, i) => {
+            const isOpen = i === open;
+            return (
+              <div key={i} style={{ borderTop: i ? `1px solid ${PB.line}` : 0 }}>
+                <button onClick={() => setOpen(isOpen ? -1 : i)} style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                  padding: '14px 14px', background: 'transparent', border: 0, cursor: 'pointer', textAlign: 'left',
+                }}>
+                  <span style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>{it.q}</span>
+                  <div style={{ width: 28, height: 28, borderRadius: 999, background: isOpen ? PB.morado : PB.surface2, color: isOpen ? '#fff' : PB.ink2, display: 'grid', placeItems: 'center', flexShrink: 0, transition: 'all 220ms' }}>
+                    <Icon name={isOpen ? 'check' : 'plus'} size={14} color={isOpen ? '#fff' : PB.ink2}/>
+                  </div>
+                </button>
+                {isOpen && (
+                  <div style={{ padding: '0 14px 16px', fontSize: 13, color: PB.ink2, lineHeight: 1.5 }}>{it.a}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ padding: '8px 20px 0', fontSize: 12, color: PB.ink3, textAlign: 'center' }}>
+          ¿No encuentras tu respuesta? <span style={{ color: PB.morado, fontWeight: 700, cursor: 'pointer' }}>Habla con soporte</span>
+        </div>
+      </div>
+      <TabBar active="perfil"/>
+    </>
+  );
+};
+
+Object.assign(window, {
+  ScreenPaymentMethods, ScreenHistory, ScreenContract, ScreenKYC, ScreenSupport, ScreenFAQ,
+});

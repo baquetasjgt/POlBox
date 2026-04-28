@@ -1,0 +1,155 @@
+/* ============================================================
+   POLEBOX — Colors & Type tokens
+   Light-first design system for the POLEBOX app & marketing.
+   ============================================================ */
+
+/* ---------- FONTS ----------------------------------------- */
+/* Primary: Archivo (geometric grotesque, close to the mark's
+   wide/bold wordmark). Display use SemiBold/Bold.
+   Secondary (numeric / mono): JetBrains Mono for timers & codes.
+   Both loaded from Google Fonts — see README for substitution notes. */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  /* ---------- BRAND CORE ---------- */
+  --pb-morado:        #482380;   /* Morado Marca — primary brand */
+  --pb-morado-deep:   #35196A;   /* hover / pressed */
+  --pb-morado-ink:    #1D0D3E;   /* text on mint / deepest shade */
+  --pb-menta:         #80E3B7;   /* Menta Marca — secondary brand */
+  --pb-menta-soft:    #C6F2DD;   /* tinted surface */
+  --pb-menta-deep:    #4FBE8A;   /* hover on mint chips / accents */
+
+  /* ---------- NEUTRALS (light theme) ---------- */
+  --pb-bg:            #FAFAF7;   /* page background — warm off-white */
+  --pb-surface:       #FFFFFF;   /* cards */
+  --pb-surface-2:     #F3F2EE;   /* subtle panel / muted card */
+  --pb-surface-3:     #E8E6E0;   /* inputs, chips resting */
+  --pb-line:          #E2E0D8;   /* hairline dividers */
+  --pb-line-strong:   #C9C6BC;   /* stronger borders */
+
+  --pb-ink:           #141318;   /* primary text, near-black */
+  --pb-ink-2:         #3A3742;   /* secondary text */
+  --pb-ink-3:         #6B6776;   /* tertiary / meta */
+  --pb-ink-4:         #A19DAB;   /* disabled / placeholder */
+
+  /* ---------- TINTS (on brand surfaces) ---------- */
+  --pb-on-morado:     #FFFFFF;
+  --pb-on-morado-dim: #D6C9EF;
+  --pb-on-menta:      var(--pb-morado-ink);
+
+  /* ---------- SEMANTIC ---------- */
+  --pb-success:       #238F5B;
+  --pb-success-bg:    #E4F6EC;
+  --pb-warn:          #B67A12;
+  --pb-warn-bg:       #FBF0D9;
+  --pb-danger:        #B23040;
+  --pb-danger-bg:     #FBE6E9;
+  --pb-info:          var(--pb-morado);
+  --pb-info-bg:       #ECE4F9;
+
+  /* ---------- TYPE SYSTEM ---------- */
+  --pb-font-display:  'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pb-font-body:     'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pb-font-mono:     'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Display scale — condensed, wide-bold like the wordmark */
+  --pb-h1-size:       56px; --pb-h1-lh: 1.02; --pb-h1-weight: 800; --pb-h1-track: -0.02em;
+  --pb-h2-size:       40px; --pb-h2-lh: 1.05; --pb-h2-weight: 800; --pb-h2-track: -0.015em;
+  --pb-h3-size:       28px; --pb-h3-lh: 1.15; --pb-h3-weight: 700; --pb-h3-track: -0.01em;
+  --pb-h4-size:       20px; --pb-h4-lh: 1.25; --pb-h4-weight: 700; --pb-h4-track: -0.005em;
+
+  /* Body */
+  --pb-body-size:     16px; --pb-body-lh: 1.5;
+  --pb-small-size:    14px; --pb-small-lh: 1.45;
+  --pb-tiny-size:     12px; --pb-tiny-lh: 1.35;
+
+  /* Eyebrow / UPPERCASE labels — signature brand tic */
+  --pb-eyebrow-size:  12px; --pb-eyebrow-weight: 700; --pb-eyebrow-track: 0.16em;
+
+  /* Mono (timers, prices, DNI codes) */
+  --pb-mono-size:     16px;
+
+  /* ---------- SPACING / RADIUS / ELEVATION ---------- */
+  --pb-space-0:  0;
+  --pb-space-1:  4px;
+  --pb-space-2:  8px;
+  --pb-space-3:  12px;
+  --pb-space-4:  16px;
+  --pb-space-5:  20px;
+  --pb-space-6:  24px;
+  --pb-space-8:  32px;
+  --pb-space-10: 40px;
+  --pb-space-12: 48px;
+  --pb-space-16: 64px;
+
+  --pb-radius-xs:  6px;
+  --pb-radius-sm:  10px;
+  --pb-radius-md:  14px;  /* standard chip / input */
+  --pb-radius-lg:  20px;  /* card */
+  --pb-radius-xl:  28px;  /* hero card / bottom sheet */
+  --pb-radius-pill: 999px;
+
+  --pb-shadow-1: 0 1px 2px rgba(20,19,24,.04), 0 1px 1px rgba(20,19,24,.03);
+  --pb-shadow-2: 0 4px 14px rgba(20,19,24,.06), 0 1px 2px rgba(20,19,24,.04);
+  --pb-shadow-3: 0 14px 40px rgba(72,35,128,.12), 0 2px 6px rgba(20,19,24,.05);
+  --pb-shadow-inset: inset 0 0 0 1px var(--pb-line);
+
+  /* Motion — snappy, confident, no bounce */
+  --pb-ease:       cubic-bezier(.2, .7, .2, 1);
+  --pb-ease-out:   cubic-bezier(0, .6, .2, 1);
+  --pb-dur-fast:   120ms;
+  --pb-dur:        220ms;
+  --pb-dur-slow:   400ms;
+}
+
+/* ---------- SEMANTIC ELEMENTS --------------------------- */
+html, body {
+  background: var(--pb-bg);
+  color: var(--pb-ink);
+  font-family: var(--pb-font-body);
+  font-size: var(--pb-body-size);
+  line-height: var(--pb-body-lh);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, .pb-h1 {
+  font-family: var(--pb-font-display);
+  font-size: var(--pb-h1-size); line-height: var(--pb-h1-lh);
+  font-weight: var(--pb-h1-weight); letter-spacing: var(--pb-h1-track);
+  margin: 0; color: var(--pb-ink);
+}
+h2, .pb-h2 {
+  font-family: var(--pb-font-display);
+  font-size: var(--pb-h2-size); line-height: var(--pb-h2-lh);
+  font-weight: var(--pb-h2-weight); letter-spacing: var(--pb-h2-track);
+  margin: 0; color: var(--pb-ink);
+}
+h3, .pb-h3 {
+  font-family: var(--pb-font-display);
+  font-size: var(--pb-h3-size); line-height: var(--pb-h3-lh);
+  font-weight: var(--pb-h3-weight); letter-spacing: var(--pb-h3-track);
+  margin: 0; color: var(--pb-ink);
+}
+h4, .pb-h4 {
+  font-family: var(--pb-font-display);
+  font-size: var(--pb-h4-size); line-height: var(--pb-h4-lh);
+  font-weight: var(--pb-h4-weight); letter-spacing: var(--pb-h4-track);
+  margin: 0; color: var(--pb-ink);
+}
+p, .pb-body { font-size: var(--pb-body-size); line-height: var(--pb-body-lh); color: var(--pb-ink-2); margin: 0; }
+small, .pb-small { font-size: var(--pb-small-size); line-height: var(--pb-small-lh); color: var(--pb-ink-3); }
+.pb-tiny { font-size: var(--pb-tiny-size); line-height: var(--pb-tiny-lh); color: var(--pb-ink-3); }
+
+.pb-eyebrow {
+  font-size: var(--pb-eyebrow-size);
+  font-weight: var(--pb-eyebrow-weight);
+  letter-spacing: var(--pb-eyebrow-track);
+  text-transform: uppercase;
+  color: var(--pb-morado);
+}
+.pb-mono { font-family: var(--pb-font-mono); font-variant-numeric: tabular-nums; }
+
+a { color: var(--pb-morado); text-underline-offset: 3px; }
+hr { border: 0; border-top: 1px solid var(--pb-line); }
+::selection { background: var(--pb-menta); color: var(--pb-morado-ink); }

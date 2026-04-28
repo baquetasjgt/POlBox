@@ -94,7 +94,7 @@ const ScreenStoreAddress = ({ onBack, onConfirm }) => {
           Confirmar dirección
         </Button>
       </div>
-      <TabBar active="home"/>
+
     </>
   );
 };

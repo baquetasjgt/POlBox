@@ -36,7 +36,7 @@ const ScreenStore = ({ onBack, onCart, cart, setCart }) => {
   return (
     <>
       <StatusBar/>
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: totalItems > 0 ? 120 : 110 }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: totalItems > 0 ? 100 : 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px 12px' }}>
           <button onClick={onBack} style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
             <Icon name="back" size={18}/>
@@ -138,7 +138,7 @@ const ScreenStore = ({ onBack, onCart, cart, setCart }) => {
           </button>
         </div>
       )}
-      <TabBar active="home"/>
+
     </>
   );
 };

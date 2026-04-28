@@ -116,7 +116,7 @@ const ScreenStorePayment = ({ onBack, total, onSuccess }) => {
           </button>
         </div>
       )}
-      <TabBar active="home"/>
+
     </>
   );
 };

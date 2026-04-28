@@ -114,7 +114,7 @@ const ScreenStoreOrder = ({ onBack, cart, delivery, address, pickup, onPay }) =>
           Ir al pago
         </Button>
       </div>
-      <TabBar active="home"/>
+
     </>
   );
 };

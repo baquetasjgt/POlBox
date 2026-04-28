@@ -136,7 +136,7 @@ const ScreenStoreCart = ({ onBack, cart, setCart, onDelivery }) => {
           </Button>
         </div>
       )}
-      <TabBar active="home"/>
+
     </>
   );
 };

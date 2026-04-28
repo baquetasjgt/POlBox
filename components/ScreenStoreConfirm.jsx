@@ -130,7 +130,7 @@ const ScreenStoreConfirm = ({ onDone, delivery, address, pickup, cart }) => {
           Volver al inicio
         </Button>
       </div>
-      <TabBar active="home"/>
+
     </>
   );
 };

@@ -113,7 +113,7 @@ const ScreenStorePickup = ({ onBack, onConfirm }) => {
           </Button>
         </div>
       )}
-      <TabBar active="home"/>
+
     </>
   );
 };

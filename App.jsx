@@ -44,7 +44,10 @@ function App() {
         return <Screen2Dashboard
           onNewReservation={() => setScreen('book')}
           onOpenKey={() => setScreen('key')}
+          onStore={() => setScreen('store')}
         />;
+      case 'store':
+        return <ScreenStore onBack={() => setScreen('dashboard')}/>;
       case 'book':
         return <Screen3Book
           onBack={() => setScreen(isAuthed ? 'dashboard' : 'venue')}
@@ -145,6 +148,7 @@ function Toolbar({ screen, setScreen, authed, setAuthed }) {
     { id: 'stripe',      label: '06 · Stripe' },
     { id: 'key',         label: '07 · Llave' },
     { id: 'profile',     label: '08 · Perfil' },
+    { id: 'store',       label: '09 · Tienda' },
     { id: 'payment-add', label: '+ Añadir tarjeta' },
   ];
   return (

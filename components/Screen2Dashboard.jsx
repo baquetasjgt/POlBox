@@ -1,6 +1,6 @@
 // POLEBOX — Screen 2: Dashboard (logged-in, has a reservation today)
 
-const Screen2Dashboard = ({ onNewReservation, onOpenKey }) => {
+const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore }) => {
   const [seconds, setSeconds] = React.useState(2 * 3600 + 15 * 60 + 30);
   React.useEffect(() => {
     const t = setInterval(() => setSeconds(s => Math.max(0, s - 1)), 1000);
@@ -88,7 +88,7 @@ const Screen2Dashboard = ({ onNewReservation, onOpenKey }) => {
             <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15 }}>¿Sin grip para hoy?</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', marginTop: 2 }}>Compra magnesio y recógelo en el pasillo.</div>
           </div>
-          <button style={{ background: PB.menta, color: PB.moradoInk, border: 0, borderRadius: 999, padding: '8px 14px', fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Tienda</button>
+          <button onClick={onStore} style={{ background: PB.menta, color: PB.moradoInk, border: 0, borderRadius: 999, padding: '8px 14px', fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Tienda</button>
         </div>
       </div>
       <TabBar active="home"/>

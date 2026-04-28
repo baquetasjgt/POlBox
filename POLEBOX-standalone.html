@@ -2359,7 +2359,15 @@ const ScreenOrderHistory = ({ onBack }) => {
 
   const orders = [
     { id: 'PB-ORD-00042', date: '12 dic 2025', delivery: 'locker', venueName: 'Salamanca', lockerId: 'L2', lockerCode: '7483', items: [{name:'Magnesio líquido',qty:2,price:8.50},{name:'Dry Hands',qty:1,price:12.00}], shipping: 0, state: 'entregado', method: 'Mastercard ••4242' },
-    { id: 'PB-ORD-00038', date: '4 dic 2025',  delivery: 'home',   addr: 'C/ Velázquez 42, Madrid', items: [{name:'Shorts pole',qty:1,price:28.00},{name:'Calcetines grip',qty:2,price:9.00}], shipping: 4.99, state: 'enviado', tracking: 'CE123456789ES', method: 'Apple Pay' },
+    { id: 'PB-ORD-00038', date: '4 dic 2025',  delivery: 'home',   addr: 'C/ Velázquez 42, Madrid', items: [{name:'Shorts pole',qty:1,price:28.00},{name:'Calcetines grip',qty:2,price:9.00}], shipping: 4.99, state: 'enviado', tracking: 'CE123456789ES', method: 'Apple Pay',
+      trackingEvents: [
+        { label: 'Pedido confirmado',      detail: 'Pago procesado. Tu pedido está confirmado.',                  time: '4 dic · 09:14', done: true  },
+        { label: 'En preparación',         detail: 'POLEBOX Salamanca está preparando tu pedido.',                time: '4 dic · 11:02', done: true  },
+        { label: 'Recogido por mensajero', detail: 'Correos Express ha recogido el paquete. Ref. CE123456789ES.', time: '5 dic · 08:47', done: true  },
+        { label: 'En reparto',             detail: 'Tu paquete está en reparto en tu zona de entrega.',           time: '5 dic · 14:22', active: true },
+        { label: 'Entregado',              detail: 'Previsto hoy antes de las 21:00.',                            time: null,            done: false  },
+      ],
+    },
     { id: 'PB-ORD-00031', date: '21 nov 2025', delivery: 'locker', venueName: 'Chamberí',   lockerId: 'L1', lockerCode: '3921', items: [{name:'Tiza en polvo',qty:3,price:5.00},{name:'Rodilleras pole',qty:1,price:18.00}], shipping: 0, state: 'entregado', method: 'Mastercard ••4242' },
     { id: 'PB-ORD-00024', date: '8 nov 2025',  delivery: 'home',   addr: 'C/ Velázquez 42, Madrid', items: [{name:'Top sin tirantes',qty:1,price:24.00}], shipping: 4.99, state: 'entregado', method: 'Visa ••0119' },
     { id: 'PB-ORD-00019', date: '28 oct 2025', delivery: 'locker', venueName: 'Salamanca',  lockerId: 'L3', lockerCode: '5512', items: [{name:'Magnesio líquido',qty:1,price:8.50},{name:'Toalla microfibra',qty:1,price:12.00}], shipping: 0, state: 'entregado', method: 'Google Pay' },
@@ -2433,6 +2441,59 @@ const ScreenOrderHistory = ({ onBack }) => {
     </>
   );
 };
+
+// ─── Shipping tracker (solo para pedidos en camino) ──────────
+const ShippingTracker = ({ events, tracking }) => (
+  <div style={{ padding: '18px 22px 22px' }}>
+    <style>{`
+      @keyframes pb-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(182,122,18,.45)} 50%{box-shadow:0 0 0 7px rgba(182,122,18,0)} }
+    `}</style>
+    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Seguimiento del envío</div>
+    <div style={{ fontFamily: PB.mono, fontSize: 11, color: PB.ink3, marginTop: 3, marginBottom: 18 }}>{tracking} · Correos Express</div>
+    {events.map((ev, i) => {
+      const isLast = i === events.length - 1;
+      const lineColor = ev.done
+        ? (!isLast && (events[i+1].done || events[i+1].active) ? PB.success : `linear-gradient(${PB.success}, ${PB.warn})`)
+        : PB.line;
+      return (
+        <div key={i} style={{ display: 'flex', gap: 14 }}>
+          {/* Columna visual */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 28, flexShrink: 0 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 999, flexShrink: 0,
+              background: ev.done ? PB.success : ev.active ? PB.warn : PB.surface2,
+              border: ev.done || ev.active ? 'none' : `2px solid ${PB.line}`,
+              display: 'grid', placeItems: 'center',
+              animation: ev.active ? 'pb-pulse 1.6s ease-in-out infinite' : 'none',
+            }}>
+              {ev.done   && <Icon name="check"   size={13} color="#fff"/>}
+              {ev.active && <Icon name="refresh" size={12} color="#fff"/>}
+            </div>
+            {!isLast && (
+              <div style={{ width: 2, flex: 1, minHeight: 22, background: lineColor, margin: '3px 0' }}/>
+            )}
+          </div>
+          {/* Contenido */}
+          <div style={{ flex: 1, paddingBottom: isLast ? 0 : 20, paddingTop: 5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span style={{
+                fontFamily: PB.font, fontWeight: ev.active ? 800 : 700, fontSize: 13,
+                color: ev.done ? PB.ink : ev.active ? PB.ink : PB.ink4,
+              }}>{ev.label}</span>
+              {ev.active && (
+                <span style={{ padding: '2px 7px', borderRadius: 999, background: PB.warnBg, color: PB.warn, fontSize: 9, fontWeight: 800, letterSpacing: '.08em' }}>AHORA</span>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: PB.ink3, marginTop: 2, lineHeight: 1.4 }}>{ev.detail}</div>
+            {ev.time && (
+              <div style={{ fontFamily: PB.mono, fontSize: 10, fontWeight: 600, marginTop: 3, color: ev.done ? PB.success : PB.warn }}>{ev.time}</div>
+            )}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+);
 
 // ─── Modal detalle de pedido (ticket receipt style) ──────────
 const OrderTicket = ({ order, onClose, fmt, total, tone }) => {
@@ -2533,28 +2594,32 @@ const OrderTicket = ({ order, onClose, fmt, total, tone }) => {
 
             <Perforation/>
 
-            {/* Código locker o seguimiento */}
-            <div style={{ padding: '18px 22px 22px', display: 'flex', gap: 16, alignItems: 'center' }}>
-              <div style={{
-                width: 72, height: 72, borderRadius: 14,
-                background: o.delivery === 'locker' ? PB.mentaSoft : PB.surface2,
-                border: `1px solid ${PB.line}`,
-                display: 'grid', placeItems: 'center', flexShrink: 0,
-              }}>
-                <Icon name={o.delivery === 'locker' ? 'bolt' : 'refresh'} size={30} color={PB.morado}/>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {o.delivery === 'locker' ? (<>
+            {/* Sección inferior: locker code, tracker o tracking simple */}
+            {o.delivery === 'locker' ? (
+              <div style={{ padding: '18px 22px 22px', display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ width: 72, height: 72, borderRadius: 14, background: PB.mentaSoft, border: `1px solid ${PB.line}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Icon name="bolt" size={30} color={PB.morado}/>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Código de apertura</div>
                   <div style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 28, color: PB.morado, letterSpacing: '.18em', marginTop: 4 }}>{o.lockerCode}</div>
                   <div style={{ fontFamily: PB.mono, fontSize: 10, color: PB.ink3, marginTop: 4 }}>Válido 48 h · {o.id}</div>
-                </>) : (<>
+                </div>
+              </div>
+            ) : o.trackingEvents ? (
+              <ShippingTracker events={o.trackingEvents} tracking={o.tracking}/>
+            ) : (
+              <div style={{ padding: '18px 22px 22px', display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ width: 72, height: 72, borderRadius: 14, background: PB.surface2, border: `1px solid ${PB.line}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Icon name="refresh" size={30} color={PB.morado}/>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Nº de seguimiento</div>
                   <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 15, color: PB.morado, letterSpacing: '.06em', marginTop: 4, wordBreak: 'break-all' }}>{o.tracking}</div>
                   <div style={{ fontSize: 11, color: PB.ink3, marginTop: 4 }}>Correos Express · {o.id}</div>
-                </>)}
+                </div>
               </div>
-            </div>
+            )}
           </TicketShape>
         </div>
 

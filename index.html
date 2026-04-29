@@ -1655,6 +1655,10 @@ const Screen5Profile = ({ onBack, onLogout, onNav }) => {
           </div>
         </div>
 
+        <Section title="Mi cuenta">
+          <Row icon="profile" title="Datos y contraseña" sub="Laura Gómez · laura.gomez@correo.com" to="edit-profile"/>
+        </Section>
+
         <Section title="Cuenta y pagos">
           <Row icon="card" title="Métodos de pago" sub="Mastercard terminada en 4242" to="payment-methods"/>
           <Row icon="history" title="Historial de reservas" sub="14 sesiones · desde oct 2025" to="history"/>
@@ -2657,6 +2661,223 @@ const OrderTicket = ({ order, onClose, fmt, total, tone }) => {
 };
 
 Object.assign(window, { ScreenOrderHistory });
+
+// ─── Editar perfil / gestión de cuenta ───────────────────────
+const ScreenEditProfile = ({ onBack }) => {
+  const [saving, setSaving]       = React.useState(false);
+  const [saved, setSaved]         = React.useState(false);
+  const [showPwd, setShowPwd]     = React.useState(false);
+  const [avatarIdx, setAvatarIdx] = React.useState(0);
+  const [form, setForm] = React.useState({
+    nombre: 'Laura', apellidos: 'Gómez',
+    telefono: '+34 612 345 678', email: 'laura.gomez@correo.com',
+    pwdActual: '', pwdNueva: '', pwdConfirm: '',
+  });
+
+  const avatarGrads = [
+    `linear-gradient(135deg, ${PB.menta}, ${PB.mentaDeep})`,
+    `linear-gradient(135deg, #C6AEFF, #7C3AED)`,
+    `linear-gradient(135deg, #FCA5A5, #DC2626)`,
+    `linear-gradient(135deg, #93C5FD, #2563EB)`,
+    `linear-gradient(135deg, #FCD34D, #D97706)`,
+  ];
+
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const handleSave = () => {
+    if (saving || saved) return;
+    setSaving(true);
+    setTimeout(() => { setSaving(false); setSaved(true); }, 1300);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const pwdStrength = (() => {
+    const p = form.pwdNueva;
+    if (!p) return null;
+    const score = p.length < 8 ? 0 : p.length < 12 ? 1 : /[A-Z]/.test(p) && /[0-9!@#$%]/.test(p) ? 3 : 2;
+    return {
+      score,
+      label: ['Muy corta', 'Débil', 'Aceptable', 'Fuerte'][score],
+      color: [PB.danger, PB.warn, PB.morado, PB.success][score],
+    };
+  })();
+
+  const Field = ({ label, value, onChange, type = 'text', badge, disabled }) => (
+    <div style={{ padding: '11px 16px', borderTop: `1px solid ${PB.line}` }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 4 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <input
+          type={type} value={value} onChange={onChange} disabled={disabled}
+          style={{
+            flex: 1, border: 0, outline: 0, padding: 0, background: 'transparent',
+            fontFamily: type === 'password' ? 'monospace' : PB.font,
+            fontWeight: 600, fontSize: 15,
+            color: disabled ? PB.ink3 : PB.ink,
+            letterSpacing: type === 'password' && value ? '.15em' : 0,
+          }}
+        />
+        {badge}
+      </div>
+    </div>
+  );
+
+  const SectionLabel = ({ title }) => (
+    <div style={{ padding: '0 4px 8px', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>{title}</div>
+  );
+  const Card = ({ children, style }) => (
+    <div style={{ background: PB.surface, border: `1px solid ${PB.line}`, borderRadius: 18, overflow: 'hidden', ...style }}>{children}</div>
+  );
+
+  return (
+    <>
+      <style>{`@keyframes pb-spin{to{transform:rotate(360deg)}}`}</style>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
+        <ProfileHeader
+          title="Mi cuenta"
+          onBack={onBack}
+          right={
+            <button onClick={handleSave} disabled={saving} style={{
+              padding: '8px 18px', borderRadius: 999, border: 0,
+              background: saved ? PB.success : PB.morado, color: '#fff',
+              fontFamily: PB.font, fontWeight: 700, fontSize: 13,
+              cursor: saving ? 'wait' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6,
+              transition: 'background 220ms cubic-bezier(.2,.7,.2,1)',
+              boxShadow: '0 4px 12px rgba(72,35,128,.3)',
+            }}>
+              {saving && <span style={{ width: 12, height: 12, borderRadius: 999, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', animation: 'pb-spin 700ms linear infinite', display: 'inline-block' }}/>}
+              {saved && <Icon name="check" size={14} color="#fff"/>}
+              {saving ? 'Guardando…' : saved ? 'Guardado' : 'Guardar'}
+            </button>
+          }
+        />
+
+        {/* ── Avatar ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 16px 20px', gap: 10 }}>
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              width: 96, height: 96, borderRadius: 999,
+              background: avatarGrads[avatarIdx],
+              border: `3px solid ${PB.morado}`,
+              display: 'grid', placeItems: 'center',
+              color: PB.moradoInk, fontFamily: PB.font, fontWeight: 800, fontSize: 30,
+              boxShadow: '0 8px 24px rgba(72,35,128,.22)',
+              transition: 'background 350ms cubic-bezier(.2,.7,.2,1)',
+            }}>LG</div>
+            <button
+              onClick={() => setAvatarIdx(i => (i + 1) % avatarGrads.length)}
+              style={{
+                position: 'absolute', bottom: 2, right: 2,
+                width: 32, height: 32, borderRadius: 999,
+                background: PB.morado, border: '2.5px solid #fff',
+                display: 'grid', placeItems: 'center', cursor: 'pointer',
+                boxShadow: '0 3px 10px rgba(72,35,128,.4)',
+              }}>
+              <Icon name="camera" size={14} color="#fff"/>
+            </button>
+          </div>
+          {/* Color swatches */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            {avatarGrads.map((g, i) => (
+              <button key={i} onClick={() => setAvatarIdx(i)} style={{
+                width: 24, height: 24, borderRadius: 999, background: g, border: 0,
+                cursor: 'pointer',
+                outline: i === avatarIdx ? `2px solid ${PB.morado}` : '2px solid transparent',
+                outlineOffset: 2,
+                transition: 'outline 180ms',
+              }}/>
+            ))}
+          </div>
+          <div style={{ fontSize: 12, color: PB.ink3 }}>Foto de perfil · elige un color o sube imagen</div>
+        </div>
+
+        {/* ── Datos personales ── */}
+        <div style={{ margin: '0 16px' }}>
+          <SectionLabel title="Datos personales"/>
+          <Card>
+            <Field label="Nombre"    value={form.nombre}    onChange={set('nombre')}/>
+            <Field label="Apellidos" value={form.apellidos} onChange={set('apellidos')}/>
+            <Field label="Teléfono"  value={form.telefono}  onChange={set('telefono')} type="tel"/>
+          </Card>
+        </div>
+
+        {/* ── Acceso ── */}
+        <div style={{ margin: '16px 16px 0' }}>
+          <SectionLabel title="Acceso"/>
+          <Card>
+            <Field
+              label="Correo electrónico" value={form.email} onChange={set('email')} type="email"
+              badge={
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 999, background: PB.successBg, color: PB.success, fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                  <Icon name="check" size={11}/> Verificado
+                </span>
+              }
+            />
+            {/* Contraseña */}
+            <div style={{ padding: '12px 16px', borderTop: `1px solid ${PB.line}` }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 4 }}>Contraseña</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: 'monospace', fontSize: 18, letterSpacing: '.2em', color: PB.ink3 }}>••••••••</span>
+                <button onClick={() => setShowPwd(v => !v)} style={{
+                  padding: '7px 16px', borderRadius: 999, border: 0,
+                  background: showPwd ? PB.surface2 : PB.morado,
+                  color: showPwd ? PB.ink2 : '#fff',
+                  fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                  transition: 'all 200ms',
+                }}>{showPwd ? 'Cancelar' : 'Cambiar'}</button>
+              </div>
+            </div>
+            {/* Formulario de contraseña */}
+            {showPwd && (<>
+              <Field label="Contraseña actual"  value={form.pwdActual}  onChange={set('pwdActual')}  type="password"/>
+              <Field label="Nueva contraseña"   value={form.pwdNueva}   onChange={set('pwdNueva')}   type="password"/>
+              {pwdStrength && (
+                <div style={{ padding: '0 16px 12px' }}>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 5 }}>
+                    {[0,1,2,3].map(i => (
+                      <div key={i} style={{ flex: 1, height: 3, borderRadius: 999, background: i <= pwdStrength.score ? pwdStrength.color : PB.line, transition: 'background 300ms' }}/>
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: pwdStrength.color }}>{pwdStrength.label}</span>
+                </div>
+              )}
+              <Field
+                label="Confirmar nueva contraseña" value={form.pwdConfirm} onChange={set('pwdConfirm')} type="password"
+                badge={form.pwdConfirm && form.pwdNueva && (
+                  form.pwdConfirm === form.pwdNueva
+                    ? <Icon name="check" size={16} color={PB.success}/>
+                    : <span style={{ fontSize: 11, color: PB.danger, fontWeight: 700, whiteSpace: 'nowrap' }}>No coincide</span>
+                )}
+              />
+            </>)}
+          </Card>
+        </div>
+
+        {/* ── Zona de peligro ── */}
+        <div style={{ margin: '24px 16px 4px' }}>
+          <SectionLabel title="Zona de peligro"/>
+          <Card>
+            <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>Eliminar mi cuenta</div>
+                <div style={{ fontSize: 12, color: PB.ink3, marginTop: 2 }}>Acción permanente e irreversible</div>
+              </div>
+              <button style={{
+                padding: '8px 14px', borderRadius: 10, border: `1px solid ${PB.dangerBg}`,
+                background: PB.dangerBg, color: PB.danger,
+                fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+              }}>Eliminar</button>
+            </div>
+          </Card>
+        </div>
+      </div>
+      <TabBar active="perfil"/>
+    </>
+  );
+};
+
+Object.assign(window, { ScreenEditProfile });
 
 </script>
 <script type="text/babel">
@@ -4254,6 +4475,8 @@ function App() {
         return <ScreenFAQ onBack={() => setScreen('profile')}/>;
       case 'order-history':
         return <ScreenOrderHistory onBack={() => setScreen('profile')}/>;
+      case 'edit-profile':
+        return <ScreenEditProfile onBack={() => setScreen('profile')}/>;
 
       // ── Tienda ────────────────────────────────────────────
       case 'store':
@@ -4328,6 +4551,7 @@ function App() {
     { id: 'store-confirm',  label: '14 · Confirmado' },
     { id: 'payment-add',    label: '+ Añadir tarjeta' },
     { id: 'order-history',  label: '+ Pedidos' },
+    { id: 'edit-profile',   label: '+ Mi cuenta' },
   ];
 
   return (

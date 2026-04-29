@@ -1657,6 +1657,7 @@ const Screen5Profile = ({ onBack, onLogout, onNav }) => {
 
         <Section title="Mi cuenta">
           <Row icon="profile" title="Datos y contraseña" sub="Laura Gómez · laura.gomez@correo.com" to="edit-profile"/>
+          <Row icon="home" title="Direcciones de entrega" sub="2 direcciones guardadas" to="addresses"/>
         </Section>
 
         <Section title="Cuenta y pagos">
@@ -2662,6 +2663,194 @@ const OrderTicket = ({ order, onClose, fmt, total, tone }) => {
 
 Object.assign(window, { ScreenOrderHistory });
 
+// ─── Gestor de direcciones de entrega ────────────────────────
+const ScreenAddresses = ({ onBack }) => {
+  const blank = { alias: 'Casa', nombre: 'Laura Gómez', calle: '', numero: '', piso: '', cp: '', ciudad: 'Madrid' };
+  const [addrs, setAddrs] = React.useState([
+    { id: 1, alias: 'Casa',    nombre: 'Laura Gómez', calle: 'C/ Velázquez',  numero: '42', piso: '3º B', cp: '28001', ciudad: 'Madrid', isDefault: true  },
+    { id: 2, alias: 'Trabajo', nombre: 'Laura Gómez', calle: 'Calle Gran Vía', numero: '30', piso: '2ª',  cp: '28013', ciudad: 'Madrid', isDefault: false },
+  ]);
+  const [modal, setModal] = React.useState(null);  // null | 'new' | addr.id
+  const [form,  setForm]  = React.useState(blank);
+  const [saving, setSaving] = React.useState(false);
+  const [saved,  setSaved]  = React.useState(false);
+  const [aliasCustom, setAliasCustom] = React.useState('');
+
+  const ALIAS_CHIPS = ['Casa', 'Trabajo', 'Gym', 'Otro'];
+  const aliasIcon = { Casa: 'home', Trabajo: 'doc', Gym: 'shield', Otro: 'profile' };
+
+  const openAdd  = () => { setForm(blank); setAliasCustom(''); setModal('new'); setSaved(false); };
+  const openEdit = a  => { setForm({ ...a }); setAliasCustom(ALIAS_CHIPS.includes(a.alias) ? '' : a.alias); setModal(a.id); setSaved(false); };
+  const closeModal   = () => { setModal(null); setSaving(false); setSaved(false); };
+  const setDefault   = id => setAddrs(a => a.map(x => ({ ...x, isDefault: x.id === id })));
+  const deleteAddr   = id => setAddrs(a => {
+    const next = a.filter(x => x.id !== id);
+    if (next.length && !next.some(x => x.isDefault)) next[0].isDefault = true;
+    return next;
+  });
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const handleSave = () => {
+    if (saving || saved) return;
+    const finalAlias = form.alias === 'Otro' ? (aliasCustom || 'Otro') : form.alias;
+    setSaving(true);
+    setTimeout(() => {
+      if (modal === 'new') {
+        const newId = Date.now();
+        setAddrs(a => [...a, { ...form, alias: finalAlias, id: newId, isDefault: a.length === 0 }]);
+      } else {
+        setAddrs(a => a.map(x => x.id === modal ? { ...form, alias: finalAlias, id: modal, isDefault: x.isDefault } : x));
+      }
+      setSaving(false); setSaved(true);
+    }, 1100);
+    setTimeout(() => closeModal(), 2300);
+  };
+
+  const FInput = ({ label, value, onChange, placeholder }) => (
+    <div className="pb-ef" style={{ padding: '10px 20px 0' }}>
+      <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 5, transition: 'color 150ms', pointerEvents: 'none' }}>{label}</label>
+      <input value={value} onChange={onChange} placeholder={placeholder || ''}
+        style={{ width: '100%', border: 0, borderBottom: `1.5px solid ${PB.line}`, outline: 0, padding: '2px 0 10px', background: 'transparent', fontFamily: PB.font, fontWeight: 600, fontSize: 15, color: PB.ink, boxSizing: 'border-box', transition: 'border-color 150ms' }}
+      />
+    </div>
+  );
+
+  return (
+    <>
+      <style>{`
+        @keyframes pb-spin{to{transform:rotate(360deg)}}
+        @keyframes pb-fade{from{opacity:0}to{opacity:1}}
+        @keyframes pb-slideup{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+        .pb-ef:focus-within label{color:${PB.morado}!important}
+        .pb-ef:focus-within input{border-bottom-color:${PB.morado}!important}
+        .pb-ef:focus-within{background:rgba(72,35,128,.025)}
+      `}</style>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
+        <ProfileHeader title="Mis direcciones" onBack={onBack}/>
+
+        <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {addrs.length === 0 && (
+            <div style={{ padding: '32px 16px', textAlign: 'center', color: PB.ink3, fontSize: 14 }}>
+              Aún no tienes direcciones guardadas.
+            </div>
+          )}
+
+          {addrs.map(a => (
+            <div key={a.id} style={{
+              background: PB.surface, borderRadius: 18, overflow: 'hidden',
+              border: `1.5px solid ${a.isDefault ? PB.morado : PB.line}`,
+              boxShadow: a.isDefault ? '0 4px 16px rgba(72,35,128,.12)' : '0 2px 6px rgba(20,19,24,.04)',
+              transition: 'all 220ms cubic-bezier(.2,.7,.2,1)',
+            }}>
+              <div style={{ padding: '14px 16px 12px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: a.isDefault ? 'rgba(72,35,128,.1)' : PB.surface2, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Icon name={aliasIcon[a.alias] || 'home'} size={20} color={a.isDefault ? PB.morado : PB.ink3}/>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
+                    <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15, color: PB.ink }}>{a.alias}</span>
+                    {a.isDefault && <span style={{ padding: '2px 8px', borderRadius: 999, background: PB.morado, color: '#fff', fontSize: 9, fontWeight: 800, letterSpacing: '.08em' }}>POR DEFECTO</span>}
+                  </div>
+                  <div style={{ fontSize: 13, color: PB.ink2 }}>{a.nombre}</div>
+                  <div style={{ fontSize: 13, color: PB.ink2 }}>{a.calle} {a.numero}{a.piso ? `, ${a.piso}` : ''}</div>
+                  <div style={{ fontSize: 12, color: PB.ink3, marginTop: 2 }}>{a.cp} {a.ciudad}</div>
+                </div>
+              </div>
+              <div style={{ borderTop: `1px solid ${PB.line}`, display: 'flex' }}>
+                {!a.isDefault && (
+                  <button onClick={() => setDefault(a.id)} style={{ flex: 1, padding: '11px 4px', border: 0, borderRight: `1px solid ${PB.line}`, background: 'transparent', color: PB.morado, fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                    Por defecto
+                  </button>
+                )}
+                <button onClick={() => openEdit(a)} style={{ flex: 1, padding: '11px 4px', border: 0, borderRight: `1px solid ${PB.line}`, background: 'transparent', color: PB.ink2, fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                  Editar
+                </button>
+                <button onClick={() => deleteAddr(a.id)} style={{ flex: 1, padding: '11px 4px', border: 0, background: 'transparent', color: PB.danger, fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <button onClick={openAdd} style={{ padding: '16px', borderRadius: 16, border: `1.5px dashed ${PB.lineStrong}`, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.morado, cursor: 'pointer' }}>
+            <Icon name="plus" size={18} color={PB.morado}/> Nueva dirección
+          </button>
+
+          <div style={{ padding: '2px 4px', fontSize: 12, color: PB.ink3, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+            <Icon name="shield" size={14} color={PB.ink4}/>
+            <span>Tus direcciones solo se usan para envíos de la tienda POLEBOX y nunca se comparten con terceros.</span>
+          </div>
+        </div>
+      </div>
+      <TabBar active="perfil"/>
+
+      {/* ── Modal añadir / editar ── */}
+      {modal !== null && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 80, background: 'rgba(20,19,24,.55)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', animation: 'pb-fade 220ms ease-out' }}>
+          <div onClick={closeModal} style={{ flex: 1, cursor: 'pointer' }}/>
+          <div style={{ background: PB.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '90%', overflowY: 'auto', animation: 'pb-slideup 320ms cubic-bezier(.2,.7,.2,1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 0' }}>
+              <div style={{ width: 44, height: 5, borderRadius: 999, background: PB.line }}/>
+            </div>
+            <div style={{ padding: '14px 20px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, letterSpacing: '-.01em' }}>
+                {modal === 'new' ? 'Nueva dirección' : 'Editar dirección'}
+              </div>
+              <button onClick={handleSave} disabled={saving} style={{
+                padding: '9px 18px', borderRadius: 999, border: 0,
+                background: saved ? PB.success : PB.morado, color: '#fff',
+                fontFamily: PB.font, fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'background 220ms', boxShadow: '0 4px 12px rgba(72,35,128,.3)',
+              }}>
+                {saving && <span style={{ width: 12, height: 12, borderRadius: 999, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', animation: 'pb-spin 700ms linear infinite', display: 'inline-block' }}/>}
+                {saved   && <Icon name="check" size={14} color="#fff"/>}
+                {saving ? 'Guardando…' : saved ? 'Guardado' : 'Guardar'}
+              </button>
+            </div>
+
+            {/* Alias chips */}
+            <div style={{ padding: '4px 20px 14px' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 8 }}>Alias</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {ALIAS_CHIPS.map(chip => (
+                  <button key={chip} onClick={() => setForm(f => ({ ...f, alias: chip }))} style={{
+                    padding: '8px 16px', borderRadius: 999, border: `1px solid ${form.alias === chip ? PB.morado : PB.line}`,
+                    background: form.alias === chip ? PB.morado : PB.surface,
+                    color: form.alias === chip ? '#fff' : PB.ink2,
+                    fontFamily: PB.font, fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all 180ms',
+                  }}>{chip}</button>
+                ))}
+              </div>
+              {form.alias === 'Otro' && (
+                <input value={aliasCustom} onChange={e => setAliasCustom(e.target.value)} placeholder="Nombre personalizado"
+                  style={{ marginTop: 10, width: '100%', border: 0, borderBottom: `1.5px solid ${PB.morado}`, outline: 0, padding: '4px 0 8px', background: 'transparent', fontFamily: PB.font, fontSize: 15, color: PB.ink, boxSizing: 'border-box' }}
+                />
+              )}
+            </div>
+
+            {/* Campos */}
+            <div style={{ borderTop: `1px solid ${PB.line}` }}>
+              <FInput label="Nombre del destinatario" value={form.nombre} onChange={set('nombre')}/>
+              <div style={{ display: 'flex' }}>
+                <div style={{ flex: 2 }}><FInput label="Calle / Avenida" value={form.calle} onChange={set('calle')} placeholder="C/ Velázquez"/></div>
+                <div style={{ flex: 1 }}><FInput label="Número" value={form.numero} onChange={set('numero')} placeholder="42"/></div>
+              </div>
+              <div style={{ display: 'flex' }}>
+                <div style={{ flex: 1 }}><FInput label="Piso / Puerta" value={form.piso} onChange={set('piso')} placeholder="3º B (opcional)"/></div>
+                <div style={{ flex: 1 }}><FInput label="Código postal" value={form.cp} onChange={set('cp')} placeholder="28001"/></div>
+              </div>
+              <FInput label="Ciudad" value={form.ciudad} onChange={set('ciudad')} placeholder="Madrid"/>
+            </div>
+            <div style={{ height: 36 }}/>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
 // ─── Editar perfil / gestión de cuenta ───────────────────────
 const ScreenEditProfile = ({ onBack }) => {
   const [saving, setSaving]       = React.useState(false);
@@ -2702,18 +2891,18 @@ const ScreenEditProfile = ({ onBack }) => {
     };
   })();
 
-  const Field = ({ label, value, onChange, type = 'text', badge, disabled }) => (
-    <div style={{ padding: '11px 16px', borderTop: `1px solid ${PB.line}` }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 4 }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+  const Field = ({ label, value, onChange, type = 'text', badge }) => (
+    <div className="pb-ef" style={{ padding: '10px 16px 0', borderTop: `1px solid ${PB.line}` }}>
+      <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 5, transition: 'color 150ms', pointerEvents: 'none' }}>{label}</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10 }}>
         <input
-          type={type} value={value} onChange={onChange} disabled={disabled}
+          type={type} value={value} onChange={onChange}
           style={{
-            flex: 1, border: 0, outline: 0, padding: 0, background: 'transparent',
-            fontFamily: type === 'password' ? 'monospace' : PB.font,
-            fontWeight: 600, fontSize: 15,
-            color: disabled ? PB.ink3 : PB.ink,
+            flex: 1, border: 0, borderBottom: `1.5px solid ${PB.line}`, outline: 0,
+            padding: '2px 0 8px', background: 'transparent',
+            fontFamily: PB.font, fontWeight: 600, fontSize: 15, color: PB.ink,
             letterSpacing: type === 'password' && value ? '.15em' : 0,
+            transition: 'border-color 150ms',
           }}
         />
         {badge}
@@ -2730,7 +2919,12 @@ const ScreenEditProfile = ({ onBack }) => {
 
   return (
     <>
-      <style>{`@keyframes pb-spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes pb-spin{to{transform:rotate(360deg)}}
+        .pb-ef:focus-within label{color:${PB.morado}!important}
+        .pb-ef:focus-within input{border-bottom-color:${PB.morado}!important}
+        .pb-ef:focus-within{background:rgba(72,35,128,.025)}
+      `}</style>
       <StatusBar/>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
         <ProfileHeader
@@ -2877,7 +3071,7 @@ const ScreenEditProfile = ({ onBack }) => {
   );
 };
 
-Object.assign(window, { ScreenEditProfile });
+Object.assign(window, { ScreenAddresses, ScreenEditProfile });
 
 </script>
 <script type="text/babel">
@@ -4477,6 +4671,8 @@ function App() {
         return <ScreenOrderHistory onBack={() => setScreen('profile')}/>;
       case 'edit-profile':
         return <ScreenEditProfile onBack={() => setScreen('profile')}/>;
+      case 'addresses':
+        return <ScreenAddresses onBack={() => setScreen('profile')}/>;
 
       // ── Tienda ────────────────────────────────────────────
       case 'store':
@@ -4552,6 +4748,7 @@ function App() {
     { id: 'payment-add',    label: '+ Añadir tarjeta' },
     { id: 'order-history',  label: '+ Pedidos' },
     { id: 'edit-profile',   label: '+ Mi cuenta' },
+    { id: 'addresses',      label: '+ Direcciones' },
   ];
 
   return (

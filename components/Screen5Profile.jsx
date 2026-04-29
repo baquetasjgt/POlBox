@@ -47,6 +47,7 @@ const Screen5Profile = ({ onBack, onLogout, onNav }) => {
 
         <Section title="Mi cuenta">
           <Row icon="profile" title="Datos y contraseña" sub="Laura Gómez · laura.gomez@correo.com" to="edit-profile"/>
+          <Row icon="home" title="Direcciones de entrega" sub="2 direcciones guardadas" to="addresses"/>
         </Section>
 
         <Section title="Cuenta y pagos">

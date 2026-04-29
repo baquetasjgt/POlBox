@@ -186,7 +186,7 @@ const BookingTicket = ({ booking, onClose }) => {
             }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', opacity: .75 }}>RECIBO</div>
-                <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 22, letterSpacing: '-.01em', marginTop: 4 }}>POLEBOX</div>
+                <div style={{ marginTop: 4 }}><Wordmark color="#fff" height={24}/></div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', opacity: .75 }}>Nº RESERVA</div>
@@ -850,7 +850,7 @@ const OrderTicket = ({ order, onClose, fmt, total, tone }) => {
             }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', opacity: .75 }}>RECIBO</div>
-                <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 22, letterSpacing: '-.01em', marginTop: 4 }}>POLEBOX</div>
+                <div style={{ marginTop: 4 }}><Wordmark color="#fff" height={24}/></div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', opacity: .75 }}>Nº PEDIDO</div>

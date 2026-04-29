@@ -45,6 +45,10 @@ const Screen5Profile = ({ onBack, onLogout, onNav }) => {
           </div>
         </div>
 
+        <Section title="Mi cuenta">
+          <Row icon="profile" title="Datos y contraseña" sub="Laura Gómez · laura.gomez@correo.com" to="edit-profile"/>
+        </Section>
+
         <Section title="Cuenta y pagos">
           <Row icon="card" title="Métodos de pago" sub="Mastercard terminada en 4242" to="payment-methods"/>
           <Row icon="history" title="Historial de reservas" sub="14 sesiones · desde oct 2025" to="history"/>

@@ -89,6 +89,8 @@ function App() {
         return <ScreenFAQ onBack={() => setScreen('profile')}/>;
       case 'order-history':
         return <ScreenOrderHistory onBack={() => setScreen('profile')}/>;
+      case 'edit-profile':
+        return <ScreenEditProfile onBack={() => setScreen('profile')}/>;
 
       // ── Tienda ────────────────────────────────────────────
       case 'store':
@@ -163,6 +165,7 @@ function App() {
     { id: 'store-confirm',  label: '14 · Confirmado' },
     { id: 'payment-add',    label: '+ Añadir tarjeta' },
     { id: 'order-history',  label: '+ Pedidos' },
+    { id: 'edit-profile',   label: '+ Mi cuenta' },
   ];
 
   return (

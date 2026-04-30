@@ -58,7 +58,8 @@ function App() {
         />;
       case 'book':
         return <Screen3Book
-          onBack={() => setScreen(isAuthed ? 'dashboard' : 'venue')}
+          selectedBono={selectedBono}
+          onBack={() => { setSelectedBono(null); setScreen(isAuthed ? 'dashboard' : 'venue'); }}
           onPay={(b) => {
             setBooking(b);
             if (!isAuthed) setAuthWall('register');

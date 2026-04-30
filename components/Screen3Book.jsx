@@ -1,10 +1,10 @@
 // POLEBOX — Screen 3: Calendar / Book (duration-first funnel, anti-gap slots)
 
-const Screen3Book = ({ onBack, onPay }) => {
-  const [dayIdx, setDayIdx] = React.useState(0); // hoy por defecto
+const Screen3Book = ({ onBack, onPay, selectedBono }) => {
+  const [dayIdx, setDayIdx] = React.useState(0);
   const [boxIdx, setBoxIdx] = React.useState(0);
-  const [duration, setDuration] = React.useState(90); // default: Recomendado
-  const [startMin, setStartMin] = React.useState(null); // minutes from 00:00
+  const [duration, setDuration] = React.useState(selectedBono?.min ?? 90);
+  const [startMin, setStartMin] = React.useState(null);
 
   // 10 días a partir de hoy
   const days = React.useMemo(() => {
@@ -18,13 +18,14 @@ const Screen3Book = ({ onBack, onPay }) => {
   }, []);
 
   // Bloques de duración
-  const durations = [
+  const allDurations = [
     { min: 45,  price: 12, label: '45 min', tag: 'Repaso rápido' },
     { min: 60,  price: 15, label: '60 min', tag: 'Sesión estándar' },
     { min: 90,  price: 20, label: '90 min', tag: 'Recomendado', featured: true },
     { min: 120, price: 25, label: '120 min', tag: 'Modo máster' },
   ];
-  const current = durations.find(d => d.min === duration);
+  const durations = selectedBono ? allDurations.filter(d => d.min === selectedBono.min) : allDurations;
+  const current = allDurations.find(d => d.min === duration);
 
   // Reservas existentes del día (min from 00:00) — por box
   // Box 0: 10:00–11:00, 12:00–13:30, 17:00–18:00
@@ -98,6 +99,17 @@ const Screen3Book = ({ onBack, onPay }) => {
           <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', margin: 0 }}>Nueva reserva</h3>
         </div>
 
+        {/* Banner bono activo */}
+        {selectedBono && (
+          <div style={{ margin: '0 16px 12px', padding: '11px 14px', borderRadius: 14, background: PB.mentaSoft, border: `1px solid ${PB.mentaDeep}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Icon name="sparkle" size={16} color={PB.morado}/>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.moradoInk }}>Reservando con {selectedBono.name}</div>
+              <div style={{ fontSize: 11, color: PB.morado, marginTop: 1 }}>{selectedBono.accesos - selectedBono.usados} accesos disponibles · {selectedBono.min} min</div>
+            </div>
+          </div>
+        )}
+
         {/* Day strip */}
         <div style={{ padding: '2px 16px 12px' }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 8 }}>1 · Día</div>
@@ -139,7 +151,9 @@ const Screen3Book = ({ onBack, onPay }) => {
         {/* Duración */}
         <div style={{ padding: '4px 16px 8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>3 · ¿Cuánto vas a entrenar?</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>
+            3 · {selectedBono ? `Duración del bono · ${selectedBono.min} min` : '¿Cuánto vas a entrenar?'}
+          </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {durations.map(d => {

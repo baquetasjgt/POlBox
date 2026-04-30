@@ -113,7 +113,13 @@ function App() {
       case 'bonos':
         return <ScreenBonos
           onBack={() => setScreen('mis-bonos')}
-          onBuy={(catalog) => { setPendingBono(catalog); setScreen('bono-payment'); }}
+          onSelect={(catalog) => { setPendingBono(catalog); setScreen('bono-resumen'); }}
+        />;
+      case 'bono-resumen':
+        return <ScreenBonoResumen
+          bono={pendingBono}
+          onBack={() => setScreen('bonos')}
+          onPay={() => setScreen('bono-payment')}
         />;
       case 'bono-payment':
         return <ScreenStorePayment
@@ -224,6 +230,7 @@ function App() {
     { id: 'addresses',      label: '+ Direcciones' },
     { id: 'mis-bonos',      label: '+ Mis bonos' },
     { id: 'bonos',          label: '+ Catálogo bonos' },
+    { id: 'bono-resumen',   label: '+ Resumen bono' },
     { id: 'bono-payment',   label: '+ Pago bono' },
     { id: 'bono-stripe',    label: '+ Stripe bono' },
   ];

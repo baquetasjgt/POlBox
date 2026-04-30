@@ -4756,8 +4756,7 @@ const BonoCard = ({ b, onClick }) => {
   );
 };
 
-const ScreenBonos = ({ onBack, onBuy }) => {
-  const [confirm, setConfirm] = React.useState(null);
+const ScreenBonos = ({ onBack, onSelect }) => {
   const fmt = n => n.toFixed(2).replace('.', ',') + ' €';
 
   const delays = { 'b5-60': '0s', 'b5-90': '1.1s', 'b10-60': '2.0s', 'b10-90': '3.1s' };
@@ -4810,9 +4809,7 @@ const ScreenBonos = ({ onBack, onBuy }) => {
         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           {BONO_CATALOG.map((b) => (
             <div key={b.id}>
-              <BonoCard b={b} onClick={() => { setConfirm(b); setBought(false); }}/>
-
-              {/* Price + CTA below card */}
+              <BonoCard b={b} onClick={() => onSelect(b)}/>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 4px 0' }}>
                 <div>
                   <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 24, color: PB.ink, letterSpacing: '-.01em' }}>{b.price} €</span>
@@ -4820,12 +4817,12 @@ const ScreenBonos = ({ onBack, onBuy }) => {
                     {fmt(b.perAcceso)}/acceso · <span style={{ color: PB.success, fontWeight: 700 }}>−{b.saving}%</span>
                   </span>
                 </div>
-                <button onClick={() => { setConfirm(b); setBought(false); }} style={{
+                <button onClick={() => onSelect(b)} style={{
                   padding: '11px 22px', borderRadius: 14, border: 0,
                   background: PB.morado, color: '#fff',
                   fontFamily: PB.font, fontWeight: 700, fontSize: 14, cursor: 'pointer',
                   boxShadow: `0 6px 18px rgba(72,35,128,.3)`,
-                }}>Comprar</button>
+                }}>¡Lo quiero!</button>
               </div>
             </div>
           ))}
@@ -4835,51 +4832,101 @@ const ScreenBonos = ({ onBack, onBuy }) => {
           Los bonos son personales e intransferibles. La caducidad empieza en la fecha de compra. Los accesos no utilizados al vencer no se reembolsan.
         </div>
       </div>
+    </>
+  );
+};
 
-      {/* Modal confirmación */}
-      {confirm && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 80, background: 'rgba(20,19,24,.55)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', animation: 'pb-fade 200ms' }}>
-          <div onClick={() => !buying && !bought && setConfirm(null)} style={{ flex: 1, cursor: 'pointer' }}/>
-          <div style={{ background: PB.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: '8px 20px 32px', animation: 'pb-slideup 300ms cubic-bezier(.2,.7,.2,1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 16px' }}>
-              <div style={{ width: 44, height: 5, borderRadius: 999, background: PB.line }}/>
-            </div>
-            <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, letterSpacing: '-.01em', marginBottom: 4 }}>{confirm.name}</div>
-            <div style={{ fontSize: 13, color: PB.ink3, marginBottom: 20 }}>{confirm.accesos} accesos · {confirm.min} min · válido {confirm.caducidadDias} días</div>
+const CONDITIONS = [
+  'Personal e intransferible. Solo puede usarlo la titular de la cuenta.',
+  'La caducidad comienza en la fecha de compra, no de primer uso.',
+  'Los accesos no utilizados al vencer el plazo no se reembolsan.',
+  'Cancelación con más de 24 h de antelación: el acceso se reintegra al bono.',
+  'Cancelación con menos de 24 h: el acceso se consume sin posibilidad de recuperación.',
+  'No acumulable con otras promociones, descuentos o códigos.',
+  'Válido exclusivamente en POLEBOX Madrid · Salamanca.',
+  'Las sesiones deben reservarse con al menos 2 horas de antelación.',
+  'POLEBOX se reserva el derecho a cancelar sesiones por causas de fuerza mayor, reintegrando el acceso al bono.',
+];
 
-            <div style={{ background: PB.surface2, borderRadius: 16, padding: '14px 16px', marginBottom: 20 }}>
-              {[
-                { k: `Bono ${confirm.accesos}×${confirm.min} min`, v: `${confirm.price},00 €` },
-                { k: 'IVA (21%) incluido', v: '' },
-              ].map((r, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: i === 0 ? PB.ink : PB.ink3 }}>
-                  <span>{r.k}</span><span style={{ fontFamily: PB.mono, fontWeight: 700 }}>{r.v}</span>
-                </div>
-              ))}
-              <div style={{ height: 1, background: PB.line, margin: '8px 0' }}/>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15 }}>Total</span>
-                <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 22 }}>{confirm.price},00 €</span>
+const ScreenBonoResumen = ({ bono, onBack, onPay }) => {
+  if (!bono) return null;
+  const th = CARD_THEMES[bono.id];
+
+  return (
+    <>
+      <StatusBar/>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 120 }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 16px', position: 'relative' }}>
+          <button onClick={onBack} style={{ position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+            <Icon name="back" size={18}/>
+          </button>
+          <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, letterSpacing: '-0.01em', margin: 0 }}>Resumen del bono</h3>
+        </div>
+
+        {/* Mini card */}
+        <div style={{ padding: '8px 24px 20px' }}>
+          <BonoCard b={bono} onClick={() => {}}/>
+        </div>
+
+        {/* Desglose */}
+        <div style={{ margin: '0 16px 16px', padding: '16px 18px', borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}` }}>
+          <Eyebrow>Tu compra</Eyebrow>
+          <div style={{ marginTop: 10 }}>
+            {[
+              { k: `${bono.name} · ${bono.accesos}×${bono.min} min`, v: `${bono.price},00 €` },
+              { k: 'IVA (21%) incluido', v: '', muted: true },
+            ].map((r, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: r.muted ? PB.ink3 : PB.ink2 }}>
+                <span>{r.k}</span>
+                <span style={{ fontFamily: PB.mono, fontWeight: 700 }}>{r.v}</span>
               </div>
+            ))}
+            <div style={{ height: 1, background: PB.line, margin: '10px 0' }}/>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15 }}>Total</span>
+              <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 22 }}>{bono.price},00 €</span>
             </div>
-
-            <button onClick={() => { onBuy(confirm); setConfirm(null); }} style={{
-              width: '100%', padding: '17px', borderRadius: 16, border: 0,
-              background: PB.morado, color: '#fff',
-              fontFamily: PB.font, fontWeight: 700, fontSize: 16, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              boxShadow: '0 8px 22px rgba(72,35,128,.35)',
-            }}>
-              <Icon name="card" size={18} color="#fff"/> Continuar al pago · {confirm.price},00 €
-            </button>
           </div>
         </div>
-      )}
+
+        {/* Condiciones */}
+        <div style={{ margin: '0 16px', padding: '16px 18px', borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}` }}>
+          <Eyebrow>Condiciones de uso</Eyebrow>
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {CONDITIONS.map((c, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 18, height: 18, borderRadius: 999, background: PB.surface2, border: `1px solid ${PB.line}`, display: 'grid', placeItems: 'center', flexShrink: 0, marginTop: 1 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: 999, background: PB.morado }}/>
+                </div>
+                <span style={{ fontSize: 12, color: PB.ink2, lineHeight: 1.55 }}>{c}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 12, background: PB.mentaSoft, fontSize: 11, color: PB.moradoInk, lineHeight: 1.5 }}>
+            Al proceder al pago confirmas que has leído y aceptas las condiciones anteriores y la <strong>política de privacidad</strong> de POLEBOX.
+          </div>
+        </div>
+
+      </div>
+
+      {/* Sticky CTA */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 16px 26px', borderTopLeftRadius: 28, borderTopRightRadius: 28, background: PB.surface, boxShadow: '0 -12px 30px rgba(20,19,24,.1)', borderTop: `1px solid ${PB.line}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>Total</div>
+          <div style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 26, color: PB.ink }}>{bono.price},00 €</div>
+        </div>
+        <Button onClick={onPay} full style={{ padding: '18px', fontSize: 16 }}>
+          <Icon name="card" size={18} color="#fff"/> Ir al pago
+        </Button>
+      </div>
     </>
   );
 };
 
 window.ScreenBonos = ScreenBonos;
+window.ScreenBonoResumen = ScreenBonoResumen;
 
 </script>
 <script type="text/babel">
@@ -5153,7 +5200,13 @@ function App() {
       case 'bonos':
         return <ScreenBonos
           onBack={() => setScreen('mis-bonos')}
-          onBuy={(catalog) => { setPendingBono(catalog); setScreen('bono-payment'); }}
+          onSelect={(catalog) => { setPendingBono(catalog); setScreen('bono-resumen'); }}
+        />;
+      case 'bono-resumen':
+        return <ScreenBonoResumen
+          bono={pendingBono}
+          onBack={() => setScreen('bonos')}
+          onPay={() => setScreen('bono-payment')}
         />;
       case 'bono-payment':
         return <ScreenStorePayment
@@ -5264,6 +5317,7 @@ function App() {
     { id: 'addresses',      label: '+ Direcciones' },
     { id: 'mis-bonos',      label: '+ Mis bonos' },
     { id: 'bonos',          label: '+ Catálogo bonos' },
+    { id: 'bono-resumen',   label: '+ Resumen bono' },
     { id: 'bono-payment',   label: '+ Pago bono' },
     { id: 'bono-stripe',    label: '+ Stripe bono' },
   ];

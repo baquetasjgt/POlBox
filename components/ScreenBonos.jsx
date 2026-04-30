@@ -37,8 +37,6 @@ const CARD_THEMES = {
 
 const BonoCard = ({ b, onClick }) => {
   const th = CARD_THEMES[b.id];
-  const expMM = String(Math.floor(b.caducidadDias / 30)).padStart(2, '0');
-  const expYY = String((new Date().getFullYear() + 1) % 100).padStart(2, '0');
 
   return (
     <div onClick={onClick} style={{
@@ -82,43 +80,34 @@ const BonoCard = ({ b, onClick }) => {
       }}/>
 
       {/* Card content */}
-      <div style={{ position: 'absolute', inset: 0, padding: '16px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{ position: 'absolute', inset: 0, padding: '18px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
 
-        {/* Top row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Top: wordmark + popular badge + ahorro */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 12, letterSpacing: '.18em', color: th.accent, textTransform: 'uppercase' }}>POLEBOX</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
             {b.popular && (
-              <div style={{ padding: '2px 8px', borderRadius: 999, background: th.accent, fontSize: 8, fontWeight: 800, color: '#000', letterSpacing: '.1em', textTransform: 'uppercase' }}>POPULAR</div>
+              <div style={{ padding: '3px 9px', borderRadius: 999, background: th.accent, fontSize: 8, fontWeight: 800, color: '#000', letterSpacing: '.1em', textTransform: 'uppercase' }}>MÁS POPULAR</div>
             )}
-            {/* EMV chip */}
-            <svg width="36" height="28" viewBox="0 0 36 28" style={{ opacity: .92 }}>
-              <rect width="36" height="28" rx="4" fill={th.accent} opacity=".82"/>
-              <line x1="0" y1="9.3" x2="36" y2="9.3" stroke="rgba(0,0,0,.22)" strokeWidth=".8"/>
-              <line x1="0" y1="18.7" x2="36" y2="18.7" stroke="rgba(0,0,0,.22)" strokeWidth=".8"/>
-              <line x1="12" y1="0" x2="12" y2="28" stroke="rgba(0,0,0,.22)" strokeWidth=".8"/>
-              <line x1="24" y1="0" x2="24" y2="28" stroke="rgba(0,0,0,.22)" strokeWidth=".8"/>
-              <rect x="12" y="9.3" width="12" height="9.4" rx="1.5" fill="rgba(0,0,0,.18)"/>
-            </svg>
+            <div style={{ padding: '3px 9px', borderRadius: 999, background: 'rgba(255,255,255,.12)', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.8)', letterSpacing: '.06em' }}>−{b.saving}%</div>
           </div>
         </div>
 
-        {/* Card number dots */}
-        <div style={{ fontFamily: PB.mono, fontSize: 15, letterSpacing: '.22em', color: 'rgba(255,255,255,.38)', lineHeight: 1 }}>
-          {'●●●●  ●●●●  ●●●●  '}{String(b.accesos).padStart(2,'0')}{String(b.min).padStart(3,'0')}
+        {/* Centre: accesos count grande */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 52, color: '#fff', lineHeight: 1, letterSpacing: '-.02em' }}>{b.accesos}</span>
+            <span style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 16, color: 'rgba(255,255,255,.6)', letterSpacing: '.04em', textTransform: 'uppercase', paddingBottom: 6 }}>accesos</span>
+          </div>
+          <div style={{ fontSize: 13, color: th.accent, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', marginTop: 2 }}>{b.min} min por sesión</div>
         </div>
 
-        {/* Bottom: name + expiry */}
+        {/* Bottom: nombre + validez */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div>
-            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.14em', color: 'rgba(255,255,255,.45)', textTransform: 'uppercase', marginBottom: 4 }}>Titular</div>
-            <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15, color: '#fff', letterSpacing: '.04em', textTransform: 'uppercase' }}>{b.name}</div>
-            <div style={{ fontSize: 10, color: th.accent, marginTop: 3, letterSpacing: '.1em', fontWeight: 700 }}>{b.accesos} ACCESOS · {b.min} MIN</div>
-          </div>
+          <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15, color: '#fff', letterSpacing: '.02em' }}>{b.name}</div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.14em', color: 'rgba(255,255,255,.45)', textTransform: 'uppercase', marginBottom: 4 }}>Válido</div>
-            <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, color: '#fff', letterSpacing: '.08em' }}>{expMM}/{expYY}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.45)', marginTop: 3, letterSpacing: '.06em' }}>{b.caducidadDias} DÍAS</div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.12em', color: 'rgba(255,255,255,.45)', textTransform: 'uppercase' }}>Válido</div>
+            <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,.75)', marginTop: 2 }}>{b.caducidadDias} días</div>
           </div>
         </div>
       </div>

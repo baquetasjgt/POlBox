@@ -15,6 +15,14 @@ function App() {
   const [authWall, setAuthWall] = React.useState(null);
   const [booking, setBooking] = React.useState(null);
 
+  // Bonos state
+  const [userBonos, setUserBonos] = React.useState([{
+    id: 'PB-BON-00012', catalogId: 'b10-60', name: 'Bono Mensual',
+    accesos: 10, min: 60, usados: 3,
+    purchaseDate: '1 nov 2025', expiryDate: '30 ene 2026', daysLeft: 91, state: 'active',
+  }]);
+  const [selectedBono, setSelectedBono] = React.useState(null);
+
   // Store state
   const [storeCart, setStoreCart] = React.useState({});
   const [storeDelivery, setStoreDelivery] = React.useState(null);
@@ -56,6 +64,7 @@ function App() {
       case 'checkout':
         return <ScreenCheckout
           booking={booking}
+          userBonos={userBonos}
           onBack={() => setScreen('book')}
           onPay={(b) => { setBooking(b); setScreen('stripe'); }}
         />;
@@ -93,6 +102,18 @@ function App() {
         return <ScreenEditProfile onBack={() => setScreen('profile')}/>;
       case 'addresses':
         return <ScreenAddresses onBack={() => setScreen('profile')}/>;
+      case 'mis-bonos':
+        return <ScreenMisBonos
+          userBonos={userBonos}
+          onBack={() => setScreen('profile')}
+          onComprar={() => setScreen('bonos')}
+          onReservar={(bono) => { setSelectedBono(bono); setScreen('book'); }}
+        />;
+      case 'bonos':
+        return <ScreenBonos
+          onBack={() => setScreen('mis-bonos')}
+          onPurchased={(newBono) => { setUserBonos(prev => [...prev, newBono]); setScreen('mis-bonos'); }}
+        />;
 
       // ── Tienda ────────────────────────────────────────────
       case 'store':
@@ -169,6 +190,8 @@ function App() {
     { id: 'order-history',  label: '+ Pedidos' },
     { id: 'edit-profile',   label: '+ Mi cuenta' },
     { id: 'addresses',      label: '+ Direcciones' },
+    { id: 'mis-bonos',      label: '+ Mis bonos' },
+    { id: 'bonos',          label: '+ Catálogo bonos' },
   ];
 
   return (

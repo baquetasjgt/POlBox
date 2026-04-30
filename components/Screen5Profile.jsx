@@ -52,6 +52,7 @@ const Screen5Profile = ({ onBack, onLogout, onNav }) => {
 
         <Section title="Cuenta y pagos">
           <Row icon="card" title="Métodos de pago" sub="Mastercard terminada en 4242" to="payment-methods"/>
+          <Row icon="sparkle" title="Mis bonos" sub="1 bono activo · 7 accesos disponibles" to="mis-bonos"/>
           <Row icon="history" title="Historial de reservas" sub="14 sesiones · desde oct 2025" to="history"/>
           <Row icon="sparkle" title="Historial de pedidos" sub="5 pedidos · tienda" to="order-history"/>
         </Section>

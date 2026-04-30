@@ -319,3 +319,4 @@ const ScreenBonoResumen = ({ bono, onBack, onPay }) => {
 
 window.ScreenBonos = ScreenBonos;
 window.ScreenBonoResumen = ScreenBonoResumen;
+window.CARD_THEMES = CARD_THEMES;

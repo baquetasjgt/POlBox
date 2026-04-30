@@ -52,6 +52,9 @@ function App() {
           onNewReservation={() => setScreen('book')}
           onOpenKey={() => setScreen('key')}
           onStore={() => setScreen('store')}
+          userBonos={userBonos}
+          onReservarConBono={(bono) => { setSelectedBono(bono); setScreen('book'); }}
+          onMisBonos={() => setScreen('mis-bonos')}
         />;
       case 'book':
         return <Screen3Book

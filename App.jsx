@@ -24,6 +24,11 @@ function App() {
   const [selectedBono, setSelectedBono] = React.useState(null);
   const [pendingBono, setPendingBono] = React.useState(null);
 
+  // Sede state
+  const [selectedVenue, setSelectedVenue] = React.useState(null);
+  const [favVenues, setFavVenues] = React.useState(['mad-salamanca']);
+  const toggleFav = (id) => setFavVenues(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
+
   // Store state
   const [storeCart, setStoreCart] = React.useState({});
   const [storeDelivery, setStoreDelivery] = React.useState(null);
@@ -45,16 +50,23 @@ function App() {
         return <ScreenVenue
           venueId={venueId}
           onBack={() => setScreen(isAuthed ? 'dashboard' : 'home-public')}
-          onBook={() => setScreen('book')}
+          onBook={() => setScreen(isAuthed ? 'select-sede' : 'book')}
         />;
       case 'dashboard':
         return <Screen2Dashboard
-          onNewReservation={() => setScreen('book')}
+          onNewReservation={() => setScreen('select-sede')}
           onOpenKey={() => setScreen('key')}
           onStore={() => setScreen('store')}
           userBonos={userBonos}
-          onReservarConBono={(bono) => { setSelectedBono(bono); setScreen('book'); }}
+          onReservarConBono={(bono) => { setSelectedBono(bono); setScreen('select-sede'); }}
           onMisBonos={() => setScreen('mis-bonos')}
+        />;
+      case 'select-sede':
+        return <ScreenSelectSede
+          favs={favVenues}
+          onToggleFav={toggleFav}
+          onBack={() => { setSelectedBono(null); setScreen('dashboard'); }}
+          onSelect={(venue) => { setSelectedVenue(venue); setScreen('book'); }}
         />;
       case 'book':
         return <Screen3Book
@@ -216,7 +228,8 @@ function App() {
     { id: 'home-public',    label: '01 · Home' },
     { id: 'venue',          label: '02 · Sede' },
     { id: 'dashboard',      label: '03 · Dashboard' },
-    { id: 'book',           label: '04 · Reserva' },
+    { id: 'select-sede',    label: '04 · Sede' },
+    { id: 'book',           label: '04b · Reserva' },
     { id: 'checkout',       label: '05 · Resumen' },
     { id: 'stripe',         label: '06 · Stripe' },
     { id: 'key',            label: '07 · Llave' },

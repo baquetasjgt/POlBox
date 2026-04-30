@@ -22,6 +22,7 @@ function App() {
     purchaseDate: '1 nov 2025', expiryDate: '30 ene 2026', daysLeft: 91, state: 'active',
   }]);
   const [selectedBono, setSelectedBono] = React.useState(null);
+  const [pendingBono, setPendingBono] = React.useState(null);
 
   // Store state
   const [storeCart, setStoreCart] = React.useState({});
@@ -112,7 +113,38 @@ function App() {
       case 'bonos':
         return <ScreenBonos
           onBack={() => setScreen('mis-bonos')}
-          onPurchased={(newBono) => { setUserBonos(prev => [...prev, newBono]); setScreen('mis-bonos'); }}
+          onBuy={(catalog) => { setPendingBono(catalog); setScreen('bono-payment'); }}
+        />;
+      case 'bono-payment':
+        return <ScreenStorePayment
+          total={pendingBono?.price ?? 0}
+          onBack={() => setScreen('bonos')}
+          onSuccess={() => setScreen('bono-stripe')}
+        />;
+      case 'bono-stripe':
+        return <ScreenStripe
+          booking={{ price: pendingBono?.price ?? 0, label: `${pendingBono?.name} · ${pendingBono?.accesos} accesos · ${pendingBono?.min} min` }}
+          onBack={() => setScreen('bono-payment')}
+          onSuccess={() => {
+            const now = new Date();
+            const expiry = new Date(now);
+            expiry.setDate(expiry.getDate() + (pendingBono?.caducidadDias ?? 60));
+            const fd = d => `${d.getDate()} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()]} ${d.getFullYear()}`;
+            setUserBonos(prev => [...prev, {
+              id: `PB-BON-${String(Math.floor(Math.random()*90000+10000))}`,
+              catalogId: pendingBono?.id,
+              name: pendingBono?.name,
+              accesos: pendingBono?.accesos,
+              min: pendingBono?.min,
+              usados: 0,
+              purchaseDate: fd(now),
+              expiryDate: fd(expiry),
+              daysLeft: pendingBono?.caducidadDias,
+              state: 'active',
+            }]);
+            setPendingBono(null);
+            setScreen('mis-bonos');
+          }}
         />;
 
       // ── Tienda ────────────────────────────────────────────
@@ -192,6 +224,8 @@ function App() {
     { id: 'addresses',      label: '+ Direcciones' },
     { id: 'mis-bonos',      label: '+ Mis bonos' },
     { id: 'bonos',          label: '+ Catálogo bonos' },
+    { id: 'bono-payment',   label: '+ Pago bono' },
+    { id: 'bono-stripe',    label: '+ Stripe bono' },
   ];
 
   return (

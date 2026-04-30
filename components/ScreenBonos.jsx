@@ -115,35 +115,9 @@ const BonoCard = ({ b, onClick }) => {
   );
 };
 
-const ScreenBonos = ({ onBack, onPurchased }) => {
+const ScreenBonos = ({ onBack, onBuy }) => {
   const [confirm, setConfirm] = React.useState(null);
-  const [buying,  setBuying]  = React.useState(false);
-  const [bought,  setBought]  = React.useState(false);
   const fmt = n => n.toFixed(2).replace('.', ',') + ' €';
-
-  const handleBuy = () => {
-    if (buying || bought) return;
-    setBuying(true);
-    setTimeout(() => { setBuying(false); setBought(true); }, 1300);
-    setTimeout(() => {
-      const now = new Date();
-      const expiry = new Date(now);
-      expiry.setDate(expiry.getDate() + confirm.caducidadDias);
-      const fmtDate = d => `${d.getDate()} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()]} ${d.getFullYear()}`;
-      onPurchased({
-        id: `PB-BON-${String(Math.floor(Math.random()*90000+10000))}`,
-        catalogId: confirm.id,
-        name: confirm.name,
-        accesos: confirm.accesos,
-        min: confirm.min,
-        usados: 0,
-        purchaseDate: fmtDate(now),
-        expiryDate: fmtDate(expiry),
-        daysLeft: confirm.caducidadDias,
-        state: 'active',
-      });
-    }, 2400);
-  };
 
   const delays = { 'b5-60': '0s', 'b5-90': '1.1s', 'b10-60': '2.0s', 'b10-90': '3.1s' };
 
@@ -248,16 +222,14 @@ const ScreenBonos = ({ onBack, onPurchased }) => {
               </div>
             </div>
 
-            <button onClick={handleBuy} disabled={buying} style={{
+            <button onClick={() => { onBuy(confirm); setConfirm(null); }} style={{
               width: '100%', padding: '17px', borderRadius: 16, border: 0,
-              background: bought ? PB.success : PB.morado, color: '#fff',
+              background: PB.morado, color: '#fff',
               fontFamily: PB.font, fontWeight: 700, fontSize: 16, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              transition: 'background 220ms', boxShadow: '0 8px 22px rgba(72,35,128,.35)',
+              boxShadow: '0 8px 22px rgba(72,35,128,.35)',
             }}>
-              {buying && <span style={{ width: 16, height: 16, borderRadius: 999, border: '2px solid rgba(255,255,255,.35)', borderTopColor: '#fff', animation: 'pb-spin 700ms linear infinite', display: 'inline-block' }}/>}
-              {bought && <Icon name="check" size={18} color="#fff"/>}
-              {buying ? 'Procesando pago…' : bought ? '¡Bono activado!' : `Confirmar · ${confirm.price},00 €`}
+              <Icon name="card" size={18} color="#fff"/> Continuar al pago · {confirm.price},00 €
             </button>
           </div>
         </div>

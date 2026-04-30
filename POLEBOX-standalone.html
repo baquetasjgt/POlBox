@@ -4642,10 +4642,12 @@ window.ScreenStoreConfirm = ScreenStoreConfirm;
 // POLEBOX — Catálogo de bonos de acceso
 
 const BONO_CATALOG = [
-  { id: 'b5-60',  name: 'Bono Inicio',      accesos: 5,  min: 60, price: 69,  perAcceso: 13.80, saving: 21, caducidadDias: 60 },
-  { id: 'b5-90',  name: 'Bono Inicio Pro',  accesos: 5,  min: 90, price: 89,  perAcceso: 17.80, saving: 19, caducidadDias: 60 },
-  { id: 'b10-60', name: 'Bono Mensual',     accesos: 10, min: 60, price: 120, perAcceso: 12.00, saving: 33, caducidadDias: 90, popular: true },
-  { id: 'b10-90', name: 'Bono Mensual Pro', accesos: 10, min: 90, price: 149, perAcceso: 14.90, saving: 32, caducidadDias: 90 },
+  { id: 'b5-60',   name: 'Bono Inicio',      accesos: 5,  min: 60, price: 69,  perAcceso: 13.80, saving: 21, caducidadDias: 60 },
+  { id: 'b5-90',   name: 'Bono Inicio Pro',  accesos: 5,  min: 90, price: 89,  perAcceso: 17.80, saving: 19, caducidadDias: 60 },
+  { id: 'b10-60',  name: 'Bono Mensual',     accesos: 10, min: 60, price: 120, perAcceso: 12.00, saving: 33, caducidadDias: 90, popular: true },
+  { id: 'b10-90',  name: 'Bono Mensual Pro', accesos: 10, min: 90, price: 149, perAcceso: 14.90, saving: 32, caducidadDias: 90 },
+  { id: 'b10-90m', name: 'Bono Mañanas',     accesos: 10, min: 90, price: 132, perAcceso: 13.20, saving: 40, caducidadDias: 90,
+    morning: true, schedule: { days: 'Lun–Vie', from: '09:00', to: '14:00', lastEntry: '12:30' } },
 ];
 window.BONO_CATALOG = BONO_CATALOG;
 
@@ -4673,6 +4675,12 @@ const CARD_THEMES = {
     accent: '#ffd166',
     glow: 'rgba(255,209,102,.28)',
     shimmer: 'rgba(255,209,102,.2)',
+  },
+  'b10-90m': {
+    bg: 'linear-gradient(140deg, #2e1600 0%, #1c0e00 45%, #361a00 100%)',
+    accent: '#ff9f43',
+    glow: 'rgba(255,159,67,.35)',
+    shimmer: 'rgba(255,159,67,.2)',
   },
 };
 
@@ -4723,12 +4731,15 @@ const BonoCard = ({ b, onClick }) => {
       {/* Card content */}
       <div style={{ position: 'absolute', inset: 0, padding: '18px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
 
-        {/* Top: wordmark + popular badge + ahorro */}
+        {/* Top: wordmark + badges */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 12, letterSpacing: '.18em', color: th.accent, textTransform: 'uppercase' }}>POLEBOX</div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
             {b.popular && (
               <div style={{ padding: '3px 9px', borderRadius: 999, background: th.accent, fontSize: 8, fontWeight: 800, color: '#000', letterSpacing: '.1em', textTransform: 'uppercase' }}>MÁS POPULAR</div>
+            )}
+            {b.morning && (
+              <div style={{ padding: '3px 9px', borderRadius: 999, background: th.accent, fontSize: 8, fontWeight: 800, color: '#000', letterSpacing: '.08em', textTransform: 'uppercase' }}>☀ MAÑANAS</div>
             )}
             <div style={{ padding: '3px 9px', borderRadius: 999, background: 'rgba(255,255,255,.12)', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.8)', letterSpacing: '.06em' }}>−{b.saving}%</div>
           </div>
@@ -4741,6 +4752,11 @@ const BonoCard = ({ b, onClick }) => {
             <span style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 16, color: 'rgba(255,255,255,.6)', letterSpacing: '.04em', textTransform: 'uppercase', paddingBottom: 6 }}>accesos</span>
           </div>
           <div style={{ fontSize: 13, color: th.accent, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', marginTop: 2 }}>{b.min} min por sesión</div>
+          {b.schedule && (
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.55)', fontWeight: 600, marginTop: 4, letterSpacing: '.04em' }}>
+              {b.schedule.days} · {b.schedule.from}–{b.schedule.to} · última entrada {b.schedule.lastEntry}
+            </div>
+          )}
         </div>
 
         {/* Bottom: nombre + validez */}
@@ -4778,10 +4794,11 @@ const ScreenBonos = ({ onBack, onSelect }) => {
           50%      { opacity: .85; }
         }
         .pb-shine { animation: pb-shine-anim 4.2s ease-in-out infinite; }
-        .pb-shine-b5-60  { animation-delay: 0s; }
-        .pb-shine-b5-90  { animation-delay: 1.1s; }
-        .pb-shine-b10-60 { animation-delay: 2.0s; }
-        .pb-shine-b10-90 { animation-delay: 3.1s; }
+        .pb-shine-b5-60   { animation-delay: 0s; }
+        .pb-shine-b5-90   { animation-delay: 1.1s; }
+        .pb-shine-b10-60  { animation-delay: 2.0s; }
+        .pb-shine-b10-90  { animation-delay: 3.1s; }
+        .pb-shine-b10-90m { animation-delay: 0.6s; }
         .pb-holo { animation: pb-holo-pulse 3s ease-in-out infinite; }
       `}</style>
 
@@ -4836,7 +4853,7 @@ const ScreenBonos = ({ onBack, onSelect }) => {
   );
 };
 
-const CONDITIONS = [
+const BASE_CONDITIONS = [
   'Personal e intransferible. Solo puede usarlo la titular de la cuenta.',
   'La caducidad comienza en la fecha de compra, no de primer uso.',
   'Los accesos no utilizados al vencer el plazo no se reembolsan.',
@@ -4846,6 +4863,9 @@ const CONDITIONS = [
   'Válido en todas las sedes de POLEBOX.',
   'POLEBOX se reserva el derecho a cancelar sesiones por causas de fuerza mayor, reintegrando el acceso al bono.',
 ];
+const getConditions = (bono) => bono.schedule
+  ? [`Uso exclusivo de mañanas: válido de ${bono.schedule.days} de ${bono.schedule.from} a ${bono.schedule.to}. Última entrada a las ${bono.schedule.lastEntry}.`, ...BASE_CONDITIONS]
+  : BASE_CONDITIONS;
 
 const ScreenBonoResumen = ({ bono, onBack, onPay }) => {
   if (!bono) return null;
@@ -4868,6 +4888,20 @@ const ScreenBonoResumen = ({ bono, onBack, onPay }) => {
         <div style={{ padding: '8px 24px 20px' }}>
           <BonoCard b={bono} onClick={() => {}}/>
         </div>
+
+        {/* Horario restringido */}
+        {bono.schedule && (
+          <div style={{ margin: '0 16px 16px', padding: '14px 16px', borderRadius: 16, background: '#fff4e6', border: '1px solid #f4a830', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <span style={{ fontSize: 20, lineHeight: 1 }}>☀</span>
+            <div>
+              <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 13, color: '#c47c00', marginBottom: 3 }}>Bono de uso exclusivo mañanas</div>
+              <div style={{ fontSize: 12, color: '#7a5200', lineHeight: 1.5 }}>
+                Válido <strong>{bono.schedule.days}</strong> de <strong>{bono.schedule.from}</strong> a <strong>{bono.schedule.to}</strong>.<br/>
+                Última entrada permitida a las <strong>{bono.schedule.lastEntry}</strong>.
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Desglose */}
         <div style={{ margin: '0 16px 16px', padding: '16px 18px', borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}` }}>
@@ -4894,7 +4928,7 @@ const ScreenBonoResumen = ({ bono, onBack, onPay }) => {
         <div style={{ margin: '0 16px', padding: '16px 18px', borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}` }}>
           <Eyebrow>Condiciones de uso</Eyebrow>
           <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {CONDITIONS.map((c, i) => (
+            {getConditions(bono).map((c, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                 <div style={{ width: 18, height: 18, borderRadius: 999, background: PB.surface2, border: `1px solid ${PB.line}`, display: 'grid', placeItems: 'center', flexShrink: 0, marginTop: 1 }}>
                   <div style={{ width: 6, height: 6, borderRadius: 999, background: PB.morado }}/>

@@ -202,7 +202,7 @@ const CONDITIONS = [
   'Cancelación con más de 24 h de antelación: el acceso se reintegra al bono.',
   'Cancelación con menos de 24 h: el acceso se consume sin posibilidad de recuperación.',
   'No acumulable con otras promociones, descuentos o códigos.',
-  'Válido exclusivamente en POLEBOX Madrid · Salamanca.',
+  'Válido en todas las sedes de POLEBOX.',
   'Las sesiones deben reservarse con al menos 2 horas de antelación.',
   'POLEBOX se reserva el derecho a cancelar sesiones por causas de fuerza mayor, reintegrando el acceso al bono.',
 ];

@@ -1,6 +1,6 @@
 // POLEBOX — Screen 5: Profile & settings
 
-const Screen5Profile = ({ onBack, onLogout, onNav }) => {
+const Screen5Profile = ({ onBack, onLogout, onNav, onGamificacion }) => {
   const Row = ({ icon, title, sub, color = PB.morado, to }) => (
     <div onClick={() => to && onNav && onNav(to)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderTop: `1px solid ${PB.line}`, cursor: 'pointer' }}>
       <div style={{ width: 36, height: 36, borderRadius: 12, background: PB.surface2, display: 'grid', placeItems: 'center', color }}>
@@ -55,6 +55,17 @@ const Screen5Profile = ({ onBack, onLogout, onNav }) => {
           <Row icon="sparkle" title="Mis bonos" sub="1 bono activo · 7 accesos disponibles" to="mis-bonos"/>
           <Row icon="history" title="Historial de reservas" sub="14 sesiones · desde oct 2025" to="history"/>
           <Row icon="sparkle" title="Historial de pedidos" sub="5 pedidos · tienda" to="order-history"/>
+        </Section>
+
+        <Section title="Mi progresión">
+          <div onClick={onGamificacion} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', cursor: 'pointer' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(140deg,#6B3A00,#3D2100)', display: 'grid', placeItems: 'center', fontSize: 18 }}>🔥</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: PB.font, fontWeight: 600, fontSize: 15, color: PB.ink }}>Puntos, niveles y logros</div>
+              <div style={{ fontSize: 12, color: PB.ink3, marginTop: 2 }}>POLEBOX Pro · 1.250 XP · Racha de 4 semanas</div>
+            </div>
+            <Icon name="chevron" size={18} color={PB.ink4}/>
+          </div>
         </Section>
 
         <Section title="Legal y seguridad">

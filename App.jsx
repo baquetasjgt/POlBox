@@ -24,6 +24,13 @@ function App() {
   const [selectedBono, setSelectedBono] = React.useState(null);
   const [pendingBono, setPendingBono] = React.useState(null);
 
+  // Gamificación state
+  const [gameData] = React.useState({
+    xp: 1250, totalSessions: 17, streakWeeks: 4, streakDays: 3,
+    unlockedBadges: ['primera-sesion','semana-1','semana-3','10-sesiones','madrugadora','primer-bono','referida-1'],
+    referrals: 2, rank: 7,
+  });
+
   // Sede state
   const [selectedVenue, setSelectedVenue] = React.useState(null);
   const [favVenues, setFavVenues] = React.useState(['mad-salamanca']);
@@ -60,6 +67,8 @@ function App() {
           userBonos={userBonos}
           onReservarConBono={(bono) => { setSelectedBono(bono); setScreen('select-sede'); }}
           onMisBonos={() => setScreen('mis-bonos')}
+          gameData={gameData}
+          onGamificacion={() => setScreen('gamificacion')}
         />;
       case 'select-sede':
         return <ScreenSelectSede
@@ -93,11 +102,17 @@ function App() {
         />;
       case 'key':
         return <Screen4Key onBack={() => setScreen('dashboard')}/>;
+      case 'gamificacion':
+        return <ScreenGamificacion
+          gameData={gameData}
+          onBack={() => setScreen('profile')}
+        />;
       case 'profile':
         return <Screen5Profile
           onBack={() => setScreen('dashboard')}
           onLogout={() => { setAuthed('no'); setScreen('home-public'); }}
           onNav={(s) => setScreen(s)}
+          onGamificacion={() => setScreen('gamificacion')}
         />;
       case 'payment-methods':
         return <ScreenPaymentMethods onBack={() => setScreen('profile')} onAdd={() => setScreen('payment-add')}/>;
@@ -250,6 +265,7 @@ function App() {
     { id: 'bono-resumen',   label: '+ Resumen bono' },
     { id: 'bono-payment',   label: '+ Pago bono' },
     { id: 'bono-stripe',    label: '+ Stripe bono' },
+    { id: 'gamificacion',   label: '+ Progresión' },
   ];
 
   return (

@@ -1,6 +1,6 @@
 // POLEBOX — Screen 2: Dashboard (logged-in, has a reservation today)
 
-const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onReservarConBono, onMisBonos }) => {
+const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onReservarConBono, onMisBonos, gameData, onGamificacion }) => {
   const [seconds, setSeconds] = React.useState(2 * 3600 + 15 * 60 + 30);
   React.useEffect(() => {
     const t = setInterval(() => setSeconds(s => Math.max(0, s - 1)), 1000);
@@ -23,6 +23,17 @@ const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onR
           <div>
             <div style={{ fontSize: 13, color: PB.ink3 }}>Hola,</div>
             <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 22, letterSpacing: '-0.01em' }}>Laura 👋</div>
+            {gameData && (() => {
+              const lvl = (window.getLevelFor || (() => ({ name: 'Poler', emoji: '⚡', color: '#42A5F5' })))(gameData.xp);
+              return (
+                <div onClick={onGamificacion} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 6, padding: '4px 10px', borderRadius: 999, background: `${lvl.color}18`, border: `1px solid ${lvl.color}40`, cursor: 'pointer' }}>
+                  <span style={{ fontSize: 13 }}>{lvl.emoji}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: lvl.color }}>{lvl.name}</span>
+                  <span style={{ fontSize: 10, color: PB.ink4, fontWeight: 600 }}>·</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#FF6B35' }}>🔥 {gameData.streakWeeks}sem</span>
+                </div>
+              );
+            })()}
           </div>
           <div style={{ width: 44, height: 44, borderRadius: 999, background: `linear-gradient(135deg, ${PB.menta}, ${PB.mentaDeep})`, border: `2px solid ${PB.morado}`, display: 'grid', placeItems: 'center', color: PB.moradoInk, fontFamily: PB.font, fontWeight: 800, fontSize: 16 }}>
             LG

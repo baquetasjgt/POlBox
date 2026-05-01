@@ -51,13 +51,7 @@ function App() {
         return <Screen1Home
           onLogin={() => setAuthWall('login')}
           onRegister={() => setAuthWall('register')}
-          onPickVenue={(id) => { setVenueId(id); setScreen('venue'); }}
-        />;
-      case 'venue':
-        return <ScreenVenue
-          venueId={venueId}
-          onBack={() => setScreen(isAuthed ? 'dashboard' : 'home-public')}
-          onBook={() => setScreen(isAuthed ? 'select-sede' : 'book')}
+          onPickVenue={() => setScreen('select-sede')}
         />;
       case 'dashboard':
         return <Screen2Dashboard
@@ -74,25 +68,25 @@ function App() {
         return <ScreenSelectSede
           favs={favVenues}
           onToggleFav={toggleFav}
-          onBack={() => { setSelectedBono(null); setScreen('dashboard'); }}
+          onBack={() => { setSelectedBono(null); setScreen(isAuthed ? 'dashboard' : 'home-public'); }}
           onSelect={(venue) => { setSelectedVenue(venue); setScreen('book'); }}
         />;
       case 'book':
         return <Screen3Book
           selectedBono={selectedBono}
-          onBack={() => { setSelectedBono(null); setScreen(isAuthed ? 'dashboard' : 'venue'); }}
-          onPay={(b) => {
-            setBooking(b);
-            if (!isAuthed) setAuthWall('register');
-            else setScreen('checkout');
-          }}
+          onBack={() => { setSelectedBono(null); setScreen(isAuthed ? 'dashboard' : 'select-sede'); }}
+          onPay={(b) => { setBooking(b); setScreen('checkout'); }}
         />;
       case 'checkout':
         return <ScreenCheckout
           booking={booking}
           userBonos={userBonos}
           onBack={() => setScreen('book')}
-          onPay={(b) => { setBooking(b); setScreen('stripe'); }}
+          onPay={(b) => {
+            setBooking(b);
+            if (!isAuthed) setAuthWall('checkout-register');
+            else setScreen('stripe');
+          }}
         />;
       case 'stripe':
         return <ScreenStripe
@@ -241,10 +235,9 @@ function App() {
 
   const toolbarItems = [
     { id: 'home-public',    label: '01 · Home' },
-    { id: 'venue',          label: '02 · Sede' },
+    { id: 'select-sede',    label: '02 · Sede' },
     { id: 'dashboard',      label: '03 · Dashboard' },
-    { id: 'select-sede',    label: '04 · Sede' },
-    { id: 'book',           label: '04b · Reserva' },
+    { id: 'book',           label: '04 · Reserva' },
     { id: 'checkout',       label: '05 · Resumen' },
     { id: 'stripe',         label: '06 · Stripe' },
     { id: 'key',            label: '07 · Llave' },
@@ -287,7 +280,7 @@ function App() {
               onAuthed={() => {
                 setAuthed('yes');
                 setAuthWall(null);
-                if (screen === 'book') setScreen('checkout');
+                if (screen === 'checkout') setScreen('stripe');
                 else if (screen === 'home-public') setScreen('dashboard');
               }}
             />

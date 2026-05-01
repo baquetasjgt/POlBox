@@ -3,7 +3,8 @@
 
 const AuthWall = ({ mode = 'register', onClose, onAuthed, onSwitchMode }) => {
   const [step, setStep] = React.useState('choose'); // 'choose' | 'email'
-  const isRegister = mode === 'register';
+  const isCheckout = mode === 'checkout-register';
+  const isRegister = mode === 'register' || isCheckout;
 
   const social = (label, bg, color, glyph) => (
     <button onClick={onAuthed} style={{
@@ -33,16 +34,28 @@ const AuthWall = ({ mode = 'register', onClose, onAuthed, onSwitchMode }) => {
         {step === 'choose' && (
           <>
             <div style={{ textAlign: 'center', marginBottom: 18 }}>
-              <Eyebrow>Un paso más</Eyebrow>
+              <Eyebrow>{isCheckout ? '¡Casi lista!' : 'Un paso más'}</Eyebrow>
               <h3 style={{ fontFamily: PB.font, fontWeight: 900, fontSize: 26, letterSpacing: '-.02em', margin: '8px 0 6px' }}>
-                {isRegister ? 'Crea tu cuenta' : 'Bienvenida de nuevo'}
+                {isCheckout ? 'Confirma y entrena' : isRegister ? 'Crea tu cuenta' : 'Bienvenida de nuevo'}
               </h3>
               <p style={{ fontSize: 13, color: PB.ink3, margin: 0, lineHeight: 1.45 }}>
-                {isRegister
-                  ? 'Para confirmar tu reserva necesitamos verificar tu identidad. Tarda 30 s.'
-                  : 'Inicia sesión para confirmar tu reserva.'}
+                {isCheckout
+                  ? 'Tu reserva está guardada. Crea una cuenta gratis en 30 segundos para confirmarla y pagar.'
+                  : isRegister
+                    ? 'Para confirmar tu reserva necesitamos verificar tu identidad. Tarda 30 s.'
+                    : 'Inicia sesión para confirmar tu reserva.'}
               </p>
             </div>
+
+            {isCheckout && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 14, background: PB.mentaSoft, border: `1px solid ${PB.mentaDeep}`, marginBottom: 14 }}>
+                <Icon name="check" size={16} color={PB.success}/>
+                <div>
+                  <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.moradoInk }}>Reserva guardada</div>
+                  <div style={{ fontSize: 11, color: PB.moradoInk, opacity: .7, marginTop: 1 }}>Al iniciar sesión continuarás al pago</div>
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {social('Continuar con Apple', '#000', '#fff',
@@ -68,9 +81,11 @@ const AuthWall = ({ mode = 'register', onClose, onAuthed, onSwitchMode }) => {
               </button>
             </div>
 
-            <div style={{ marginTop: 14, padding: 12, borderRadius: 12, background: PB.mentaSoft, color: PB.moradoInk, fontSize: 11.5, lineHeight: 1.45 }}>
-              <strong style={{ fontWeight: 800 }}>Siguiente paso tras crear cuenta:</strong> verificación rápida con DNI + selfie + firma del descargo. Una sola vez, para toda tu vida en POLEBOX.
-            </div>
+            {!isCheckout && (
+              <div style={{ marginTop: 14, padding: 12, borderRadius: 12, background: PB.mentaSoft, color: PB.moradoInk, fontSize: 11.5, lineHeight: 1.45 }}>
+                <strong style={{ fontWeight: 800 }}>Siguiente paso tras crear cuenta:</strong> verificación rápida con DNI + selfie + firma del descargo. Una sola vez, para toda tu vida en POLEBOX.
+              </div>
+            )}
           </>
         )}
 

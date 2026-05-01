@@ -164,7 +164,7 @@ const ScreenCheckout = ({ booking, onBack, onPay, userBonos }) => {
         </div>
         <Button
           onClick={() => onPay({ ...b, method: usingBono ? 'bono' : sel.id, methodLabel: usingBono ? `Bono ${compatibleBono?.id}` : sel.label, bonoId: usingBono ? compatibleBono?.id : null })}
-          full style={{ padding: '18px', fontSize: 16, background: usingBono ? PB.morado : undefined }}
+          full style={{ padding: '18px', fontSize: 16 }}
         >
           {usingBono ? <><Icon name="sparkle" size={18} color="#fff"/> Confirmar con bono</> : <>
             {sel.id === 'apple' && <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.2 13.4c0-1.8 1.5-2.7 1.6-2.7-.9-1.3-2.2-1.5-2.7-1.5-1.1-.1-2.2.7-2.8.7s-1.5-.7-2.4-.7c-1.3 0-2.4.7-3 1.9-1.3 2.3-.3 5.6.9 7.5.6.9 1.3 1.9 2.3 1.9s1.3-.6 2.4-.6 1.4.6 2.4.6 1.7-.9 2.3-1.8c.7-1 1-2.1 1-2.1s-2-.7-2-3.2zm-2-5.7c.5-.6.8-1.4.7-2.3-.7 0-1.5.4-2 1-.4.5-.8 1.3-.7 2.1.8 0 1.5-.4 2-.8z"/></svg>}

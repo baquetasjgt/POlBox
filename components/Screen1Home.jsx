@@ -269,7 +269,7 @@ const Screen1Home = ({ onLogin, onRegister, onPickVenue }) => {
           </Button>
         </div>
       </div>
-      <TabBar active="home" locked={{ reservas: true, llave: true, perfil: true }}/>
+      <TabBar active="home" locked={{ reservas: true, tienda: true, perfil: true }}/>
     </>
   );
 };

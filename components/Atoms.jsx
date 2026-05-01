@@ -51,6 +51,7 @@ const Icon = ({ name, size = 22, color = 'currentColor', strokeWidth = 1.75 }) =
     light:    <><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12c1 1 1 2 1 3h6c0-1 0-2 1-3a7 7 0 0 0-4-12z"/></>,
     camera:   <><path d="M23 7l-7 5 7 5V7zM1 5h15v14H1z"/></>,
     play:     <><path d="M5 3l14 9-14 9V3z"/></>,
+    store:    <><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></>,
   };
   return <svg {...common}>{paths[name] || paths.home}</svg>;
 };
@@ -95,11 +96,16 @@ const Phone = ({ children, bg = PB.bg, label }) => (
 // ── Bottom tab bar ───────────────────────────────────────────
 const TabBar = ({ active = 'home', locked = {}, onTab = () => {} }) => {
   const items = [
-    { id: 'home', label: 'Inicio', icon: 'home' },
-    { id: 'reservas', label: 'Reservas', icon: 'calendar' },
-    { id: 'llave', label: 'Llave', icon: 'key' },
-    { id: 'perfil', label: 'Perfil', icon: 'profile' },
+    { id: 'home',    label: 'Inicio',   icon: 'home' },
+    { id: 'reservas',label: 'Reservas', icon: 'calendar' },
+    { id: 'tienda',  label: 'Tienda',   icon: 'store' },
+    { id: 'perfil',  label: 'Perfil',   icon: 'profile' },
   ];
+  const handleTab = (id) => {
+    if (locked[id]) return;
+    onTab(id);
+    if (window.__pbTabNav) window.__pbTabNav(id);
+  };
   return (
     <div style={{
       position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 14px 26px',
@@ -110,7 +116,7 @@ const TabBar = ({ active = 'home', locked = {}, onTab = () => {} }) => {
         const isActive = it.id === active;
         const isLocked = locked[it.id];
         return (
-          <button key={it.id} onClick={() => !isLocked && onTab(it.id)} style={{
+          <button key={it.id} onClick={() => handleTab(it.id)} style={{
             flex: 1, background: 'transparent', border: 0, padding: '6px 4px',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
             color: isActive ? PB.morado : (isLocked ? PB.ink4 : PB.ink3),

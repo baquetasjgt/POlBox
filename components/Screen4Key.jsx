@@ -145,7 +145,7 @@ const Screen4Key = ({ onBack }) => {
           </Button>
         </div>
       </div>
-      <TabBar active="llave"/>
+      <TabBar active="home"/>
     </>
   );
 };

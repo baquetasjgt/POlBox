@@ -45,6 +45,14 @@ function App() {
 
   const isAuthed = authed === 'yes';
 
+  // Tab bar global nav — todas las pantallas lo usan via window.__pbTabNav
+  window.__pbTabNav = (id) => {
+    if      (id === 'tienda')   setScreen('store');
+    else if (id === 'home')     setScreen(isAuthed ? 'dashboard' : 'home-public');
+    else if (id === 'reservas') setScreen(isAuthed ? 'select-sede' : 'home-public');
+    else if (id === 'perfil')   setScreen(isAuthed ? 'profile' : 'home-public');
+  };
+
   const renderScreen = () => {
     switch (screen) {
       case 'home-public':

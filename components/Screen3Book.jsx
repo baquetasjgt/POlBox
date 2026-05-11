@@ -1,6 +1,6 @@
 // POLEBOX — Screen 3: Calendar / Book (duration-first funnel, anti-gap slots)
 
-const Screen3Book = ({ onBack, onPay, selectedBono }) => {
+const Screen3Book = ({ onBack, onPay, selectedBono, userCurso }) => {
   const [dayIdx, setDayIdx] = React.useState(0);
   const [boxIdx, setBoxIdx] = React.useState(0);
   const [duration, setDuration] = React.useState(selectedBono?.min ?? 90);
@@ -87,6 +87,17 @@ const Screen3Book = ({ onBack, onPay, selectedBono }) => {
   const fmt = (m) => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
   const endMin = startMin != null ? startMin + duration : null;
 
+  const courseSuggestion = React.useMemo(() => {
+    const catalog = window.COURSE_CATALOG;
+    if (!userCurso || !catalog) return null;
+    const course = catalog.find(c => c.id === userCurso.courseId);
+    if (!course) return null;
+    const doneSet = new Set(userCurso.completedLessons || []);
+    const nextLesson = course.lessons.find(l => !doneSet.has(l.n));
+    if (!nextLesson) return null;
+    return { course, nextLesson };
+  }, [userCurso]);
+
   return (
     <>
       <StatusBar/>
@@ -106,6 +117,27 @@ const Screen3Book = ({ onBack, onPay, selectedBono }) => {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.moradoInk }}>Reservando con {selectedBono.name}</div>
               <div style={{ fontSize: 11, color: PB.morado, marginTop: 1 }}>{selectedBono.accesos - selectedBono.usados} accesos disponibles · {selectedBono.min} min</div>
+            </div>
+          </div>
+        )}
+
+        {/* Sugerencia de clase del curso */}
+        {courseSuggestion && (
+          <div style={{ margin: '0 16px 12px', padding: '10px 14px', borderRadius: 14,
+            background: `${courseSuggestion.course.accent}18`,
+            border: `1px solid ${courseSuggestion.course.accent}50`,
+            display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: courseSuggestion.course.bg,
+              display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <Icon name="play" size={13} color="#fff"/>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: PB.ink2, letterSpacing: '.06em' }}>
+                Clase sugerida para esta sesión
+              </div>
+              <div style={{ fontSize: 12, color: PB.ink3, marginTop: 1 }}>
+                Clase {courseSuggestion.nextLesson.n} · {courseSuggestion.nextLesson.title} · {courseSuggestion.nextLesson.min} min
+              </div>
             </div>
           </div>
         )}

@@ -31,6 +31,10 @@ function App() {
     referrals: 2, rank: 7,
   });
 
+  // Cursos state
+  const [userCurso, setUserCurso] = React.useState({ courseId: 'curso-basico', completedLessons: [1, 2, 3, 4] });
+  const [pendingCurso, setPendingCurso] = React.useState(null);
+
   // Sede state
   const [selectedVenue, setSelectedVenue] = React.useState(null);
   const [favVenues, setFavVenues] = React.useState(['mad-salamanca']);
@@ -82,6 +86,7 @@ function App() {
       case 'book':
         return <Screen3Book
           selectedBono={selectedBono}
+          userCurso={userCurso}
           onBack={() => { setSelectedBono(null); setScreen(isAuthed ? 'dashboard' : 'select-sede'); }}
           onPay={(b) => { setBooking(b); setScreen('checkout'); }}
         />;
@@ -103,11 +108,33 @@ function App() {
           onSuccess={() => setScreen('key')}
         />;
       case 'key':
-        return <Screen4Key onBack={() => setScreen('dashboard')}/>;
+        return <Screen4Key onBack={() => setScreen('dashboard')} userCurso={userCurso} onCursos={() => setScreen('cursos')}/>;
       case 'gamificacion':
         return <ScreenGamificacion
           gameData={gameData}
           onBack={() => setScreen('profile')}
+        />;
+      case 'cursos':
+        return <ScreenCursos
+          userCurso={userCurso}
+          onBuy={(c) => { setPendingCurso(c); setScreen('curso-payment'); }}
+          onBack={() => setScreen('profile')}
+        />;
+      case 'curso-payment':
+        return <ScreenStorePayment
+          total={pendingCurso?.price ?? 0}
+          onBack={() => setScreen('cursos')}
+          onSuccess={() => setScreen('curso-stripe')}
+        />;
+      case 'curso-stripe':
+        return <ScreenStripe
+          booking={{ price: pendingCurso?.price ?? 0, label: `${pendingCurso?.name} · 10 clases online` }}
+          onBack={() => setScreen('curso-payment')}
+          onSuccess={() => {
+            setUserCurso({ courseId: pendingCurso?.id, completedLessons: [] });
+            setPendingCurso(null);
+            setScreen('cursos');
+          }}
         />;
       case 'profile':
         return <Screen5Profile
@@ -115,6 +142,8 @@ function App() {
           onLogout={() => { setAuthed('no'); setScreen('home-public'); }}
           onNav={(s) => setScreen(s)}
           onGamificacion={() => setScreen('gamificacion')}
+          userCurso={userCurso}
+          onCursos={() => setScreen('cursos')}
         />;
       case 'payment-methods':
         return <ScreenPaymentMethods onBack={() => setScreen('profile')} onAdd={() => setScreen('payment-add')}/>;
@@ -267,6 +296,9 @@ function App() {
     { id: 'bono-payment',   label: '+ Pago bono' },
     { id: 'bono-stripe',    label: '+ Stripe bono' },
     { id: 'gamificacion',   label: '+ Progresión' },
+    { id: 'cursos',         label: '+ Cursos' },
+    { id: 'curso-payment',  label: '+ Pago curso' },
+    { id: 'curso-stripe',   label: '+ Stripe curso' },
   ];
 
   return (

@@ -1,6 +1,107 @@
 // POLEBOX — Screen 4: Digital Key (live access + domotics)
 
-const Screen4Key = ({ onBack }) => {
+const CourseSection = ({ userCurso, onCursos }) => {
+  const [castKey, setCastKey] = React.useState(null);
+  const catalog = window.COURSE_CATALOG;
+  if (!catalog || !userCurso) return null;
+  const course = catalog.find(c => c.id === userCurso.courseId);
+  if (!course) return null;
+  const doneSet = new Set(userCurso.completedLessons || []);
+  const nextLesson = course.lessons.find(l => !doneSet.has(l.n)) || null;
+  const CCIcon = window.IconChromecast;
+  const APIcon = window.IconAirplay;
+
+  return (
+    <div style={{ padding: '14px 20px 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15, letterSpacing: '-0.01em', margin: 0 }}>Tu clase de hoy</h3>
+        <Eyebrow style={{ cursor: 'pointer' }} onClick={onCursos}>{course.level}</Eyebrow>
+      </div>
+      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+        {/* Vertical timeline dots */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 2 }}>
+          {course.lessons.map((l, i) => {
+            const done = doneSet.has(l.n);
+            const isCurr = nextLesson && l.n === nextLesson.n;
+            const isLast = i === course.lessons.length - 1;
+            return (
+              <React.Fragment key={l.n}>
+                <div style={{
+                  width: 16, height: 16, borderRadius: 999, flexShrink: 0,
+                  background: done ? PB.success : isCurr ? course.accent : PB.surface2,
+                  border: `2px solid ${done ? PB.success : isCurr ? course.accent : PB.line}`,
+                  display: 'grid', placeItems: 'center',
+                  boxShadow: isCurr ? `0 0 8px ${course.accent}90` : 'none',
+                }}>
+                  {done && <Icon name="check" size={8} color="#fff"/>}
+                  {isCurr && <div style={{ width: 5, height: 5, borderRadius: 999, background: PB.moradoInk }}/>}
+                </div>
+                {!isLast && <div style={{ width: 2, height: 10, borderRadius: 1,
+                  background: done ? PB.success : PB.line }}/>}
+              </React.Fragment>
+            );
+          })}
+        </div>
+        {/* Next lesson card */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {nextLesson ? (
+            <div style={{ padding: '12px 14px', borderRadius: 16,
+              background: PB.surface, border: `1.5px solid ${PB.line}`,
+              boxShadow: '0 4px 14px rgba(20,19,24,.06)' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em',
+                textTransform: 'uppercase', color: PB.ink3, marginBottom: 5 }}>
+                Siguiente · Clase {nextLesson.n}
+              </div>
+              <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 14,
+                color: PB.ink, marginBottom: 4, lineHeight: 1.3 }}>{nextLesson.title}</div>
+              <div style={{ fontSize: 11, color: PB.ink3, marginBottom: 10 }}>
+                {nextLesson.min} min · Sincroniza con la TV del box
+              </div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: castKey ? 8 : 0 }}>
+                {CCIcon && APIcon && [
+                  { type: 'chromecast', label: 'Chromecast', CIcon: CCIcon },
+                  { type: 'airplay',    label: 'AirPlay',    CIcon: APIcon },
+                ].map(({ type, label, CIcon }) => {
+                  const active = castKey === type;
+                  return (
+                    <button key={type} onClick={() => setCastKey(active ? null : type)} style={{
+                      flex: 1, padding: '8px 6px', borderRadius: 10, cursor: 'pointer',
+                      border: `1.5px solid ${active ? PB.mentaDeep : PB.line}`,
+                      background: active ? PB.mentaSoft : PB.surface2,
+                      color: active ? PB.success : PB.ink3,
+                      fontFamily: PB.font, fontWeight: 700, fontSize: 11,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    }}>
+                      <CIcon size={13} color={active ? PB.success : PB.ink3}/>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              {castKey && (
+                <div style={{ padding: '7px 10px', borderRadius: 10,
+                  background: PB.mentaSoft, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon name="check" size={12} color={PB.success}/>
+                  <span style={{ fontSize: 11, color: PB.moradoInk, fontWeight: 700 }}>
+                    {castKey === 'chromecast' ? 'Chromecast' : 'AirPlay'} · la TV mostrará la clase
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ padding: '12px 14px', borderRadius: 16,
+              background: PB.successBg, border: `1px solid ${PB.success}40` }}>
+              <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.success }}>¡Curso completado!</div>
+              <div style={{ fontSize: 12, color: PB.moradoInk, marginTop: 3 }}>Todas las clases vistas</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Screen4Key = ({ onBack, userCurso, onCursos }) => {
   const [streetUnlocked, setStreetUnlocked] = React.useState(false);
   const [boxUnlocked, setBoxUnlocked] = React.useState(false);
   const [light, setLight] = React.useState('neon');
@@ -137,6 +238,9 @@ const Screen4Key = ({ onBack }) => {
             })}
           </div>
         </div>
+
+        {/* Course section */}
+        <CourseSection userCurso={userCurso} onCursos={onCursos}/>
 
         {/* SOS */}
         <div style={{ padding: '18px 16px 8px' }}>

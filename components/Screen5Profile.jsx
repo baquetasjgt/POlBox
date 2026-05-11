@@ -1,6 +1,6 @@
 // POLEBOX — Screen 5: Profile & settings
 
-const Screen5Profile = ({ onBack, onLogout, onNav, onGamificacion }) => {
+const Screen5Profile = ({ onBack, onLogout, onNav, onGamificacion, userCurso, onCursos }) => {
   const Row = ({ icon, title, sub, color = PB.morado, to }) => (
     <div onClick={() => to && onNav && onNav(to)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderTop: `1px solid ${PB.line}`, cursor: 'pointer' }}>
       <div style={{ width: 36, height: 36, borderRadius: 12, background: PB.surface2, display: 'grid', placeItems: 'center', color }}>
@@ -67,6 +67,73 @@ const Screen5Profile = ({ onBack, onLogout, onNav, onGamificacion }) => {
             <Icon name="chevron" size={18} color={PB.ink4}/>
           </div>
         </Section>
+
+        {userCurso && window.COURSE_CATALOG && (() => {
+          const catalog = window.COURSE_CATALOG;
+          const course = catalog?.find(c => c.id === userCurso.courseId);
+          if (!course) return null;
+          const doneSet = new Set(userCurso.completedLessons || []);
+          const nextLesson = course.lessons.find(l => !doneSet.has(l.n)) || null;
+          const CCIcon = window.IconChromecast;
+          const APIcon = window.IconAirplay;
+          return (
+            <Section title="Mi formación">
+              <div style={{ padding: '14px 16px', borderTop: 0 }}>
+                {/* Progress header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: course.bg,
+                    display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 13,
+                      color: course.accent }}>{doneSet.size}/{course.classes}</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14, color: PB.ink }}>{course.name}</div>
+                    <div style={{ marginTop: 5, height: 4, borderRadius: 999, background: PB.surface2 }}>
+                      <div style={{ height: '100%', width: `${(doneSet.size / course.classes) * 100}%`,
+                        borderRadius: 999, background: course.accent }}/>
+                    </div>
+                  </div>
+                </div>
+                {/* Next lesson */}
+                {nextLesson && (
+                  <div style={{ padding: '10px 12px', borderRadius: 12,
+                    background: `${course.accent}18`, border: `1px solid ${course.accent}40`,
+                    marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em',
+                      textTransform: 'uppercase', color: PB.ink3, marginBottom: 4 }}>
+                      Siguiente clase
+                    </div>
+                    <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.ink }}>
+                      Clase {nextLesson.n} · {nextLesson.title}
+                    </div>
+                    <div style={{ fontSize: 11, color: PB.ink3, marginTop: 2 }}>{nextLesson.min} min</div>
+                  </div>
+                )}
+                {/* Cast + open */}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {CCIcon && APIcon && [
+                    { type: 'chromecast', label: 'Chromecast', CIcon: CCIcon },
+                    { type: 'airplay',    label: 'AirPlay',    CIcon: APIcon },
+                  ].map(({ type, label, CIcon }) => (
+                    <button key={type} style={{
+                      flex: 1, padding: '9px 6px', borderRadius: 10, cursor: 'pointer',
+                      border: `1.5px solid ${PB.line}`, background: PB.surface2,
+                      color: PB.ink3, fontFamily: PB.font, fontWeight: 700, fontSize: 11,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    }}>
+                      <CIcon size={13} color={PB.ink3}/>{label}
+                    </button>
+                  ))}
+                  <button onClick={onCursos} style={{
+                    flex: 1, padding: '9px 6px', borderRadius: 10, cursor: 'pointer',
+                    border: `1.5px solid ${PB.line}`, background: PB.surface2,
+                    color: PB.ink2, fontFamily: PB.font, fontWeight: 700, fontSize: 11,
+                  }}>Ver clases →</button>
+                </div>
+              </div>
+            </Section>
+          );
+        })()}
 
         <Section title="Legal y seguridad">
           <Row icon="doc" title="Mi contrato y normativa" sub="Descargo de responsabilidad firmado" to="contract"/>

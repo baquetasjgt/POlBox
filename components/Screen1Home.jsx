@@ -2,7 +2,7 @@
 // Hero de valor + mapa multisede + sedes cercanas + cómo funciona + prueba social + FAQ.
 // Exploración en modo invitado; el muro de auth aparece SOLO al pagar.
 
-const Screen1Home = ({ onLogin, onRegister, onPickVenue }) => {
+const Screen1Home = ({ onLogin, onRegister, onPickVenue, onCursos }) => {
   const [faqOpen, setFaqOpen] = React.useState(0);
   const [pinSel, setPinSel] = React.useState(0);
 
@@ -203,6 +203,78 @@ const Screen1Home = ({ onLogin, onRegister, onPickVenue }) => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* ─── Cursos online — bloque embudo ─── */}
+        <div style={{ margin: '0 16px 20px', borderRadius: 24, overflow: 'hidden', boxShadow: '0 16px 36px rgba(10,32,24,.28)' }}>
+          {/* Cabecera oscura con barra de pole */}
+          <div style={{ background: 'linear-gradient(140deg, #1a4a35 0%, #0a2018 100%)', padding: '22px 20px 18px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '8%', right: '18%', bottom: '5%', width: 5, borderRadius: 2,
+              background: 'rgba(255,255,255,.28)', boxShadow: `0 0 28px ${PB.menta}` }}/>
+            <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 999, background: `${PB.menta}12`, filter: 'blur(40px)' }}/>
+            <Eyebrow color={PB.menta} style={{ marginBottom: 8 }}>Nuevo · Cursos online</Eyebrow>
+            <h3 style={{ color: '#fff', fontFamily: PB.font, fontWeight: 900, fontSize: 22, lineHeight: 1.1,
+              letterSpacing: '-.02em', margin: '8px 0 8px', maxWidth: '80%' }}>
+              ¿Sin profe? Ahora tienes clases en vídeo.
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, margin: '0 0 14px', lineHeight: 1.45, maxWidth: '88%' }}>
+              10 vídeo-clases que se sincronizan con tu sesión en el box. Sigue tu progreso y lanza la clase en la TV via Chromecast o AirPlay.
+            </p>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+              {['10 clases / nivel', 'Chromecast · AirPlay', 'Básico & Intermedio', 'Acceso de por vida'].map(t => (
+                <span key={t} style={{ padding: '3px 9px', borderRadius: 999,
+                  background: 'rgba(128,227,183,.15)', border: `1px solid ${PB.menta}40`,
+                  fontSize: 10, fontWeight: 700, color: PB.menta }}>{t}</span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <button onClick={onCursos} style={{
+                padding: '12px 18px', borderRadius: 12, border: 0,
+                background: PB.menta, color: PB.moradoInk,
+                fontFamily: PB.font, fontWeight: 800, fontSize: 14, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8,
+                boxShadow: `0 8px 20px ${PB.menta}50`,
+              }}>
+                <Icon name="play" size={15} color={PB.moradoInk}/>
+                Ver cursos
+              </button>
+              <div>
+                <div style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 20, color: '#fff', lineHeight: 1 }}>desde 49 €</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', fontWeight: 600, marginTop: 2 }}>pago único · sin suscripción</div>
+              </div>
+            </div>
+          </div>
+          {/* Mini preview de cursos */}
+          <div style={{ background: PB.surface, padding: '12px 14px', display: 'flex', gap: 8 }}>
+            {[
+              { level: 'Básico',      price: '49 €', accent: PB.menta,   bg: 'linear-gradient(140deg, #1a4a35, #0a2018)', lessons: 10 },
+              { level: 'Intermedio',  price: '69 €', accent: '#c9a8ff',  bg: 'linear-gradient(140deg, #3e1478, #1f0844)', lessons: 10 },
+            ].map(c => (
+              <div key={c.level} onClick={onCursos} style={{ flex: 1, borderRadius: 14,
+                border: `1px solid ${PB.line}`, overflow: 'hidden', cursor: 'pointer' }}>
+                <div style={{ height: 48, background: c.bg, position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: '8%', left: '50%', bottom: '6%', width: 3,
+                    transform: 'translateX(-50%)', background: 'rgba(255,255,255,.3)', borderRadius: 1,
+                    boxShadow: `0 0 12px ${c.accent}` }}/>
+                  <div style={{ position: 'absolute', top: 6, left: 8, padding: '2px 6px', borderRadius: 999,
+                    background: 'rgba(255,255,255,.12)', fontSize: 9, fontWeight: 800,
+                    color: c.accent, letterSpacing: '.06em', textTransform: 'uppercase' }}>{c.level}</div>
+                </div>
+                <div style={{ padding: '8px 10px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: PB.ink }}>{c.lessons} clases</div>
+                  <div style={{ fontSize: 10, color: PB.morado, fontWeight: 800, marginTop: 1 }}>{c.price}</div>
+                </div>
+              </div>
+            ))}
+            <div style={{ flex: 1, borderRadius: 14, border: `1.5px dashed ${PB.line}`,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              padding: '10px 6px', cursor: 'pointer', gap: 4 }} onClick={onCursos}>
+              <div style={{ width: 28, height: 28, borderRadius: 999, background: PB.surface2, display: 'grid', placeItems: 'center' }}>
+                <Icon name="arrow" size={14} color={PB.morado}/>
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: PB.morado, textAlign: 'center', lineHeight: 1.2 }}>Ver catálogo</div>
+            </div>
+          </div>
         </div>
 
         {/* ─── Prueba social ──────────────────── */}

@@ -1,6 +1,6 @@
 // POLEBOX — Screen 2: Dashboard (logged-in, has a reservation today)
 
-const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onReservarConBono, onMisBonos, gameData, onGamificacion }) => {
+const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onReservarConBono, onMisBonos, gameData, onGamificacion, userCurso, onCursos }) => {
   const [seconds, setSeconds] = React.useState(2 * 3600 + 15 * 60 + 30);
   React.useEffect(() => {
     const t = setInterval(() => setSeconds(s => Math.max(0, s - 1)), 1000);
@@ -122,6 +122,63 @@ const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onR
                   <Icon name="key" size={13} color="#fff"/> Reservar con bono
                 </button>
               </div>
+            </div>
+          );
+        })()}
+
+        {/* Course progress widget */}
+        {userCurso && window.COURSE_CATALOG && (() => {
+          const course = window.COURSE_CATALOG.find(c => c.id === userCurso.courseId);
+          if (!course) return null;
+          const doneSet = new Set(userCurso.completedLessons || []);
+          const nextLesson = course.lessons.find(l => !doneSet.has(l.n)) || null;
+          const pct = Math.round((doneSet.size / course.classes) * 100);
+          return (
+            <div style={{ margin: '0 16px 16px', borderRadius: 20, overflow: 'hidden',
+              border: `1px solid ${PB.line}`, boxShadow: '0 6px 20px rgba(20,19,24,.06)' }}>
+              <div style={{ background: course.bg, padding: '14px 18px 16px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: '5%', right: '14%', bottom: '5%', width: 4,
+                  background: 'rgba(255,255,255,.28)', borderRadius: 2,
+                  boxShadow: `0 0 18px ${course.accent}` }}/>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.16em',
+                      color: `${course.accent}bb`, textTransform: 'uppercase', marginBottom: 3 }}>Tu curso online</div>
+                    <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 16, color: '#fff' }}>{course.name}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 26, color: '#fff', lineHeight: 1 }}>{doneSet.size}</span>
+                    <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.4)' }}>/{course.classes}</span>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.45)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>clases</div>
+                  </div>
+                </div>
+                <div style={{ marginTop: 12, height: 4, borderRadius: 999, background: 'rgba(255,255,255,.15)' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, borderRadius: 999, background: course.accent, transition: 'width .4s' }}/>
+                </div>
+              </div>
+              {nextLesson && (
+                <div style={{ background: PB.surface, padding: '12px 16px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, color: PB.ink3, fontWeight: 600 }}>Siguiente clase</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: PB.ink, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {nextLesson.n}. {nextLesson.title}
+                    </div>
+                  </div>
+                  <button onClick={onCursos} style={{
+                    flexShrink: 0, padding: '9px 14px', borderRadius: 12, border: 0,
+                    background: PB.morado, color: '#fff',
+                    fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(72,35,128,.28)',
+                  }}>Ver clase →</button>
+                </div>
+              )}
+              {!nextLesson && (
+                <div style={{ background: PB.successBg, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Icon name="check" size={16} color={PB.success}/>
+                  <span style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.success }}>¡Curso completado! Repasa cuando quieras.</span>
+                </div>
+              )}
             </div>
           );
         })()}

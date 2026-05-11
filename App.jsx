@@ -64,6 +64,7 @@ function App() {
           onLogin={() => setAuthWall('login')}
           onRegister={() => setAuthWall('register')}
           onPickVenue={() => setScreen('select-sede')}
+          onCursos={() => setScreen('cursos')}
         />;
       case 'dashboard':
         return <Screen2Dashboard
@@ -75,6 +76,8 @@ function App() {
           onMisBonos={() => setScreen('mis-bonos')}
           gameData={gameData}
           onGamificacion={() => setScreen('gamificacion')}
+          userCurso={userCurso}
+          onCursos={() => setScreen('cursos')}
         />;
       case 'select-sede':
         return <ScreenSelectSede
@@ -117,8 +120,12 @@ function App() {
       case 'cursos':
         return <ScreenCursos
           userCurso={userCurso}
-          onBuy={(c) => { setPendingCurso(c); setScreen('curso-payment'); }}
-          onBack={() => setScreen('profile')}
+          onBuy={(c) => {
+            setPendingCurso(c);
+            if (!isAuthed) setAuthWall('register');
+            else setScreen('curso-payment');
+          }}
+          onBack={() => setScreen(isAuthed ? 'profile' : 'home-public')}
         />;
       case 'curso-payment':
         return <ScreenStorePayment
@@ -321,7 +328,8 @@ function App() {
                 setAuthed('yes');
                 setAuthWall(null);
                 if (screen === 'checkout') setScreen('stripe');
-                else if (screen === 'home-public') setScreen('dashboard');
+                else if (screen === 'cursos' && pendingCurso) setScreen('curso-payment');
+                else setScreen('dashboard');
               }}
             />
           )}

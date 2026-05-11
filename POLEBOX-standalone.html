@@ -369,7 +369,7 @@ Object.assign(window, { PB, Icon, StatusBar, Phone, TabBar, Wordmark, Eyebrow, B
 // Hero de valor + mapa multisede + sedes cercanas + cómo funciona + prueba social + FAQ.
 // Exploración en modo invitado; el muro de auth aparece SOLO al pagar.
 
-const Screen1Home = ({ onLogin, onRegister, onPickVenue }) => {
+const Screen1Home = ({ onLogin, onRegister, onPickVenue, onCursos }) => {
   const [faqOpen, setFaqOpen] = React.useState(0);
   const [pinSel, setPinSel] = React.useState(0);
 
@@ -570,6 +570,78 @@ const Screen1Home = ({ onLogin, onRegister, onPickVenue }) => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* ─── Cursos online — bloque embudo ─── */}
+        <div style={{ margin: '0 16px 20px', borderRadius: 24, overflow: 'hidden', boxShadow: '0 16px 36px rgba(10,32,24,.28)' }}>
+          {/* Cabecera oscura con barra de pole */}
+          <div style={{ background: 'linear-gradient(140deg, #1a4a35 0%, #0a2018 100%)', padding: '22px 20px 18px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '8%', right: '18%', bottom: '5%', width: 5, borderRadius: 2,
+              background: 'rgba(255,255,255,.28)', boxShadow: `0 0 28px ${PB.menta}` }}/>
+            <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 999, background: `${PB.menta}12`, filter: 'blur(40px)' }}/>
+            <Eyebrow color={PB.menta} style={{ marginBottom: 8 }}>Nuevo · Cursos online</Eyebrow>
+            <h3 style={{ color: '#fff', fontFamily: PB.font, fontWeight: 900, fontSize: 22, lineHeight: 1.1,
+              letterSpacing: '-.02em', margin: '8px 0 8px', maxWidth: '80%' }}>
+              ¿Sin profe? Ahora tienes clases en vídeo.
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, margin: '0 0 14px', lineHeight: 1.45, maxWidth: '88%' }}>
+              10 vídeo-clases que se sincronizan con tu sesión en el box. Sigue tu progreso y lanza la clase en la TV via Chromecast o AirPlay.
+            </p>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+              {['10 clases / nivel', 'Chromecast · AirPlay', 'Básico & Intermedio', 'Acceso de por vida'].map(t => (
+                <span key={t} style={{ padding: '3px 9px', borderRadius: 999,
+                  background: 'rgba(128,227,183,.15)', border: `1px solid ${PB.menta}40`,
+                  fontSize: 10, fontWeight: 700, color: PB.menta }}>{t}</span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <button onClick={onCursos} style={{
+                padding: '12px 18px', borderRadius: 12, border: 0,
+                background: PB.menta, color: PB.moradoInk,
+                fontFamily: PB.font, fontWeight: 800, fontSize: 14, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8,
+                boxShadow: `0 8px 20px ${PB.menta}50`,
+              }}>
+                <Icon name="play" size={15} color={PB.moradoInk}/>
+                Ver cursos
+              </button>
+              <div>
+                <div style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 20, color: '#fff', lineHeight: 1 }}>desde 49 €</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', fontWeight: 600, marginTop: 2 }}>pago único · sin suscripción</div>
+              </div>
+            </div>
+          </div>
+          {/* Mini preview de cursos */}
+          <div style={{ background: PB.surface, padding: '12px 14px', display: 'flex', gap: 8 }}>
+            {[
+              { level: 'Básico',      price: '49 €', accent: PB.menta,   bg: 'linear-gradient(140deg, #1a4a35, #0a2018)', lessons: 10 },
+              { level: 'Intermedio',  price: '69 €', accent: '#c9a8ff',  bg: 'linear-gradient(140deg, #3e1478, #1f0844)', lessons: 10 },
+            ].map(c => (
+              <div key={c.level} onClick={onCursos} style={{ flex: 1, borderRadius: 14,
+                border: `1px solid ${PB.line}`, overflow: 'hidden', cursor: 'pointer' }}>
+                <div style={{ height: 48, background: c.bg, position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: '8%', left: '50%', bottom: '6%', width: 3,
+                    transform: 'translateX(-50%)', background: 'rgba(255,255,255,.3)', borderRadius: 1,
+                    boxShadow: `0 0 12px ${c.accent}` }}/>
+                  <div style={{ position: 'absolute', top: 6, left: 8, padding: '2px 6px', borderRadius: 999,
+                    background: 'rgba(255,255,255,.12)', fontSize: 9, fontWeight: 800,
+                    color: c.accent, letterSpacing: '.06em', textTransform: 'uppercase' }}>{c.level}</div>
+                </div>
+                <div style={{ padding: '8px 10px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: PB.ink }}>{c.lessons} clases</div>
+                  <div style={{ fontSize: 10, color: PB.morado, fontWeight: 800, marginTop: 1 }}>{c.price}</div>
+                </div>
+              </div>
+            ))}
+            <div style={{ flex: 1, borderRadius: 14, border: `1.5px dashed ${PB.line}`,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              padding: '10px 6px', cursor: 'pointer', gap: 4 }} onClick={onCursos}>
+              <div style={{ width: 28, height: 28, borderRadius: 999, background: PB.surface2, display: 'grid', placeItems: 'center' }}>
+                <Icon name="arrow" size={14} color={PB.morado}/>
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: PB.morado, textAlign: 'center', lineHeight: 1.2 }}>Ver catálogo</div>
+            </div>
+          </div>
         </div>
 
         {/* ─── Prueba social ──────────────────── */}
@@ -826,7 +898,7 @@ window.ScreenVenue = ScreenVenue;
 <script type="text/babel">
 // POLEBOX — Screen 2: Dashboard (logged-in, has a reservation today)
 
-const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onReservarConBono, onMisBonos, gameData, onGamificacion }) => {
+const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onReservarConBono, onMisBonos, gameData, onGamificacion, userCurso, onCursos }) => {
   const [seconds, setSeconds] = React.useState(2 * 3600 + 15 * 60 + 30);
   React.useEffect(() => {
     const t = setInterval(() => setSeconds(s => Math.max(0, s - 1)), 1000);
@@ -948,6 +1020,63 @@ const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onR
                   <Icon name="key" size={13} color="#fff"/> Reservar con bono
                 </button>
               </div>
+            </div>
+          );
+        })()}
+
+        {/* Course progress widget */}
+        {userCurso && window.COURSE_CATALOG && (() => {
+          const course = window.COURSE_CATALOG.find(c => c.id === userCurso.courseId);
+          if (!course) return null;
+          const doneSet = new Set(userCurso.completedLessons || []);
+          const nextLesson = course.lessons.find(l => !doneSet.has(l.n)) || null;
+          const pct = Math.round((doneSet.size / course.classes) * 100);
+          return (
+            <div style={{ margin: '0 16px 16px', borderRadius: 20, overflow: 'hidden',
+              border: `1px solid ${PB.line}`, boxShadow: '0 6px 20px rgba(20,19,24,.06)' }}>
+              <div style={{ background: course.bg, padding: '14px 18px 16px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: '5%', right: '14%', bottom: '5%', width: 4,
+                  background: 'rgba(255,255,255,.28)', borderRadius: 2,
+                  boxShadow: `0 0 18px ${course.accent}` }}/>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.16em',
+                      color: `${course.accent}bb`, textTransform: 'uppercase', marginBottom: 3 }}>Tu curso online</div>
+                    <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 16, color: '#fff' }}>{course.name}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 26, color: '#fff', lineHeight: 1 }}>{doneSet.size}</span>
+                    <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.4)' }}>/{course.classes}</span>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.45)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>clases</div>
+                  </div>
+                </div>
+                <div style={{ marginTop: 12, height: 4, borderRadius: 999, background: 'rgba(255,255,255,.15)' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, borderRadius: 999, background: course.accent, transition: 'width .4s' }}/>
+                </div>
+              </div>
+              {nextLesson && (
+                <div style={{ background: PB.surface, padding: '12px 16px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, color: PB.ink3, fontWeight: 600 }}>Siguiente clase</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: PB.ink, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {nextLesson.n}. {nextLesson.title}
+                    </div>
+                  </div>
+                  <button onClick={onCursos} style={{
+                    flexShrink: 0, padding: '9px 14px', borderRadius: 12, border: 0,
+                    background: PB.morado, color: '#fff',
+                    fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(72,35,128,.28)',
+                  }}>Ver clase →</button>
+                </div>
+              )}
+              {!nextLesson && (
+                <div style={{ background: PB.successBg, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Icon name="check" size={16} color={PB.success}/>
+                  <span style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.success }}>¡Curso completado! Repasa cuando quieras.</span>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -6885,6 +7014,7 @@ function App() {
           onLogin={() => setAuthWall('login')}
           onRegister={() => setAuthWall('register')}
           onPickVenue={() => setScreen('select-sede')}
+          onCursos={() => setScreen('cursos')}
         />;
       case 'dashboard':
         return <Screen2Dashboard
@@ -6896,6 +7026,8 @@ function App() {
           onMisBonos={() => setScreen('mis-bonos')}
           gameData={gameData}
           onGamificacion={() => setScreen('gamificacion')}
+          userCurso={userCurso}
+          onCursos={() => setScreen('cursos')}
         />;
       case 'select-sede':
         return <ScreenSelectSede
@@ -6938,8 +7070,12 @@ function App() {
       case 'cursos':
         return <ScreenCursos
           userCurso={userCurso}
-          onBuy={(c) => { setPendingCurso(c); setScreen('curso-payment'); }}
-          onBack={() => setScreen('profile')}
+          onBuy={(c) => {
+            setPendingCurso(c);
+            if (!isAuthed) setAuthWall('register');
+            else setScreen('curso-payment');
+          }}
+          onBack={() => setScreen(isAuthed ? 'profile' : 'home-public')}
         />;
       case 'curso-payment':
         return <ScreenStorePayment
@@ -7142,7 +7278,8 @@ function App() {
                 setAuthed('yes');
                 setAuthWall(null);
                 if (screen === 'checkout') setScreen('stripe');
-                else if (screen === 'home-public') setScreen('dashboard');
+                else if (screen === 'cursos' && pendingCurso) setScreen('curso-payment');
+                else setScreen('dashboard');
               }}
             />
           )}

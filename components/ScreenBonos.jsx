@@ -59,6 +59,9 @@ const BonoCard = ({ b, onClick }) => {
             {b.morning && (
               <div style={{ padding: '3px 9px', borderRadius: 999, background: th.accent, fontSize: 8, fontWeight: 800, color: '#000', letterSpacing: '.08em', textTransform: 'uppercase' }}>☀ MAÑANAS</div>
             )}
+            {b.type === 'subscription' && (
+              <div style={{ padding: '3px 9px', borderRadius: 999, background: th.accent, fontSize: 8, fontWeight: 800, color: '#000', letterSpacing: '.08em', textTransform: 'uppercase' }}>↻ SUSCRIPCIÓN</div>
+            )}
             <div style={{ padding: '3px 9px', borderRadius: 999, background: 'rgba(255,255,255,.12)', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.8)', letterSpacing: '.06em' }}>−{b.saving}%</div>
           </div>
         </div>
@@ -81,8 +84,8 @@ const BonoCard = ({ b, onClick }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15, color: '#fff', letterSpacing: '.02em' }}>{b.name}</div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.12em', color: 'rgba(255,255,255,.45)', textTransform: 'uppercase' }}>Válido</div>
-            <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,.75)', marginTop: 2 }}>{b.caducidadDias} días</div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.12em', color: 'rgba(255,255,255,.45)', textTransform: 'uppercase' }}>{b.type === 'subscription' ? 'Renovación' : 'Válido'}</div>
+            <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,.75)', marginTop: 2 }}>{b.type === 'subscription' ? 'mensual' : `${b.caducidadDias} días`}</div>
           </div>
         </div>
       </div>
@@ -163,8 +166,39 @@ const ScreenBonos = ({ onBack, onSelect }) => {
           ))}
         </div>
 
+        {/* Membresía recurrente */}
+        {window.SUBSCRIPTION_TIER && (
+          <div style={{ padding: '26px 16px 0' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 4 }}>¿Entrenas cada semana?</div>
+            <div style={{ fontSize: 12, color: PB.ink3, marginBottom: 14 }}>La membresía renueva sola y añade ventajas que ningún bono tiene.</div>
+            <BonoCard b={SUBSCRIPTION_TIER} onClick={() => onSelect(SUBSCRIPTION_TIER)}/>
+            <div style={{ padding: '12px 4px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div>
+                  <span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 24, color: PB.ink, letterSpacing: '-.01em' }}>{SUBSCRIPTION_TIER.price} €</span>
+                  <span style={{ fontSize: 12, color: PB.ink3, marginLeft: 6 }}>/mes · cancela cuando quieras</span>
+                </div>
+                <button onClick={() => onSelect(SUBSCRIPTION_TIER)} style={{
+                  padding: '11px 22px', borderRadius: 14, border: 0,
+                  background: PB.morado, color: '#fff',
+                  fontFamily: PB.font, fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  boxShadow: `0 6px 18px rgba(72,35,128,.3)`,
+                }}>Suscribirme</button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {SUBSCRIPTION_TIER.perks.map(p => (
+                  <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: PB.ink2 }}>
+                    <Icon name="check" size={13} color={PB.success}/> {p}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ margin: '20px 20px 0', fontSize: 11, color: PB.ink4, lineHeight: 1.6 }}>
           Los bonos son personales e intransferibles. La caducidad empieza en la fecha de compra. Los accesos no utilizados al vencer no se reembolsan.
+          La membresía Unlimited se renueva automáticamente cada mes y puede cancelarse en cualquier momento desde tu perfil.
         </div>
       </div>
     </>

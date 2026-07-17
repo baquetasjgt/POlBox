@@ -199,19 +199,22 @@ const CourseDetail = ({ c, owned, onBack, onBuy, onMyCourse }) => {
 };
 
 // ── Pantalla principal ────────────────────────────────────────────────────────
-const ScreenCursos = ({ onBack, userCurso, onBuy }) => {
+const ScreenCursos = ({ onBack, userCurso, userCursos, onBuy, onCompleteLesson, onPracticar }) => {
   const [tab,         setTab]         = React.useState(userCurso ? 'mi-curso' : 'catalogo');
   const [playing,     setPlaying]     = React.useState(null);
   const [casting,     setCasting]     = React.useState(null);
   const [detailCurso, setDetailCurso] = React.useState(null);
+  const [justDone,    setJustDone]    = React.useState(null); // última clase completada → CTA practicar
 
+  // Cursos en propiedad (array: comprar un 2º curso ya no destruye el anterior)
+  const ownedIds  = new Set((userCursos || (userCurso ? [userCurso] : [])).map(c => c.courseId));
   const course    = userCurso ? COURSE_CATALOG.find(c => c.id === userCurso.courseId) : null;
   const doneSet   = new Set(userCurso?.completedLessons || []);
   const nextLesson= course?.lessons.find(l => !doneSet.has(l.n)) || null;
 
   // ── Detalle de curso ──────────────────────────────────────────────────────
   if (detailCurso) {
-    const owned = userCurso?.courseId === detailCurso.id;
+    const owned = ownedIds.has(detailCurso.id);
     return (
       <CourseDetail
         c={detailCurso}
@@ -264,7 +267,9 @@ const ScreenCursos = ({ onBack, userCurso, onBuy }) => {
         <div style={{ background: '#111827', padding: '16px 18px 28px' }}>
           <div style={{ height: 4, borderRadius: 999, background: 'rgba(255,255,255,.12)',
             marginBottom: 16, overflow: 'hidden' }}>
-            <div style={{ width: '34%', height: '100%', borderRadius: 999, background: course.accent }}/>
+            <div style={{ width: '34%', height: '100%', borderRadius: 999, background: course.accent,
+              animation: 'pb-lesson-progress 30s linear forwards' }}/>
+            <style>{`@keyframes pb-lesson-progress{from{width:34%}to{width:100%}}`}</style>
           </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
             {[
@@ -288,6 +293,21 @@ const ScreenCursos = ({ onBack, userCurso, onBuy }) => {
               );
             })}
           </div>
+          {!doneSet.has(playing.n) && (
+            <button onClick={() => {
+              onCompleteLesson && onCompleteLesson(course.id, playing.n);
+              setJustDone(playing);
+              setPlaying(null);
+              setTab('mi-curso');
+            }} style={{
+              width: '100%', padding: '14px', borderRadius: 12, border: 0, marginBottom: 8,
+              background: course.accent, color: '#0a0a0f',
+              fontFamily: PB.font, fontWeight: 800, fontSize: 14, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <Icon name="check" size={16} color="#0a0a0f"/> Marcar como vista · +30 XP
+            </button>
+          )}
           <button onClick={() => setPlaying(null)} style={{
             width: '100%', padding: '14px', borderRadius: 12, border: 0,
             background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.7)',
@@ -376,6 +396,25 @@ const ScreenCursos = ({ onBack, userCurso, onBuy }) => {
         {/* ── Mi curso ── */}
         {tab === 'mi-curso' && course && (
           <div style={{ padding: '0 16px' }}>
+            {/* Loop curso→box: la clase completada empuja a reservar */}
+            {justDone && (
+              <div style={{ marginBottom: 14, padding: '14px 16px', borderRadius: 18,
+                background: PB.mentaSoft, border: `1.5px solid ${PB.mentaDeep}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <Icon name="check" size={16} color={PB.success}/>
+                  <span style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 13, color: PB.moradoInk }}>
+                    ¡Clase {justDone.n} completada!
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: PB.moradoInk, lineHeight: 1.5, marginBottom: 12 }}>
+                  La teoría ya la tienes — ahora fíjala en la barra. Reserva un box y practica
+                  «{justDone.title}» mientras lo tienes fresco.
+                </div>
+                <Button onClick={onPracticar} full icon="calendar" style={{ padding: '13px', fontSize: 14 }}>
+                  Practicar en un box · desde 12 €
+                </Button>
+              </div>
+            )}
             <div style={{ borderRadius: 20, overflow: 'hidden', background: course.bg,
               marginBottom: 14, boxShadow: `0 14px 36px ${course.accent}22` }}>
               <div style={{ padding: '18px 20px' }}>
@@ -494,7 +533,7 @@ const ScreenCursos = ({ onBack, userCurso, onBuy }) => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {COURSE_CATALOG.map(c => {
-                const owned = userCurso?.courseId === c.id;
+                const owned = ownedIds.has(c.id);
                 return (
                   <div key={c.id} onClick={() => setDetailCurso(c)} style={{ borderRadius: 20, overflow: 'hidden',
                     background: PB.surface, border: `1px solid ${PB.line}`,

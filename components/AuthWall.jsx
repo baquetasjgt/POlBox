@@ -3,11 +3,14 @@
 
 const AuthWall = ({ mode = 'register', onClose, onAuthed, onSwitchMode }) => {
   const [step, setStep] = React.useState('choose'); // 'choose' | 'email'
+  const [refCode, setRefCode] = React.useState('');
   const isCheckout = mode === 'checkout-register';
   const isRegister = mode === 'register' || isCheckout;
 
+  const finish = () => onAuthed({ refCode: isRegister ? refCode.trim() : '' });
+
   const social = (label, bg, color, glyph) => (
-    <button onClick={onAuthed} style={{
+    <button onClick={finish} style={{
       width: '100%', padding: '14px', borderRadius: 14, border: `1px solid ${PB.line}`,
       background: bg, color, fontFamily: PB.font, fontWeight: 700, fontSize: 15,
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
@@ -107,9 +110,28 @@ const AuthWall = ({ mode = 'register', onClose, onAuthed, onSwitchMode }) => {
             <input type="password" placeholder="••••••••" style={{
               width: '100%', padding: '14px 16px', borderRadius: 14, border: `1px solid ${PB.line}`,
               background: PB.surface2, fontFamily: PB.font, fontSize: 15, color: PB.ink, boxSizing: 'border-box',
-              marginBottom: 16, outline: 'none',
+              marginBottom: isRegister ? 10 : 16, outline: 'none',
             }}/>
-            <Button onClick={onAuthed} full style={{ padding: '16px', fontSize: 15 }}>
+            {isRegister && (
+              <>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 6 }}>
+                  Código de invitación <span style={{ color: PB.ink4, textTransform: 'none', letterSpacing: 0 }}>(opcional)</span>
+                </label>
+                <input
+                  value={refCode}
+                  onChange={e => setRefCode(e.target.value)}
+                  placeholder="PB-XXXX-000"
+                  style={{
+                    width: '100%', padding: '14px 16px', borderRadius: 14, border: `1px solid ${refCode ? PB.mentaDeep : PB.line}`,
+                    background: refCode ? PB.mentaSoft : PB.surface2, fontFamily: PB.mono, fontSize: 14, color: PB.ink,
+                    boxSizing: 'border-box', marginBottom: 6, outline: 'none', textTransform: 'uppercase',
+                  }}/>
+                <div style={{ fontSize: 11, color: PB.ink3, marginBottom: 14 }}>
+                  Con código de amiga: tu primera sesión al 50% y ella gana +1 acceso.
+                </div>
+              </>
+            )}
+            <Button onClick={finish} full style={{ padding: '16px', fontSize: 15 }}>
               {isRegister ? 'Crear cuenta y continuar' : 'Entrar'}
             </Button>
           </>

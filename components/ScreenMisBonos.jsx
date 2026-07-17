@@ -1,6 +1,6 @@
 // POLEBOX — Mis bonos activos
 
-const ScreenMisBonos = ({ onBack, onComprar, onReservar, userBonos }) => {
+const ScreenMisBonos = ({ onBack, onComprar, onReservar, onRenovar, userBonos }) => {
   const bonos = userBonos || [];
   const activos  = bonos.filter(b => b.state === 'active');
   const inactivos = bonos.filter(b => b.state !== 'active');
@@ -89,14 +89,36 @@ const ScreenMisBonos = ({ onBack, onComprar, onReservar, userBonos }) => {
                     <ProgressBar used={b.usados} total={b.accesos}/>
                     <div style={{ fontSize: 11, color: PB.ink3 }}>{restantes} acceso{restantes !== 1 ? 's' : ''} disponible{restantes !== 1 ? 's' : ''}</div>
 
-                    {/* Caducidad */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 12px', borderRadius: 10, background: urgencyBg(b.daysLeft) }}>
-                      <Icon name="history" size={14} color={urgencyColor(b.daysLeft)}/>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: urgencyColor(b.daysLeft) }}>
-                        {b.daysLeft <= 7 ? `¡Solo ${b.daysLeft} días!` : `${b.daysLeft} días restantes`}
-                      </span>
-                      <span style={{ fontSize: 12, color: PB.ink3, marginLeft: 'auto' }}>Vence {b.expiryDate}</span>
-                    </div>
+                    {/* Caducidad / renovación */}
+                    {b.type === 'subscription' ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 12px', borderRadius: 10, background: PB.infoBg }}>
+                        <Icon name="refresh" size={14} color={PB.morado}/>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: PB.morado }}>Suscripción activa</span>
+                        <span style={{ fontSize: 12, color: PB.ink3, marginLeft: 'auto' }}>Se renueva el {b.expiryDate}</span>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 12px', borderRadius: 10, background: urgencyBg(b.daysLeft) }}>
+                        <Icon name="history" size={14} color={urgencyColor(b.daysLeft)}/>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: urgencyColor(b.daysLeft) }}>
+                          {b.daysLeft <= 7 ? `¡Solo ${b.daysLeft} días!` : `${b.daysLeft} días restantes`}
+                        </span>
+                        <span style={{ fontSize: 12, color: PB.ink3, marginLeft: 'auto' }}>Vence {b.expiryDate}</span>
+                      </div>
+                    )}
+
+                    {/* Recompra proactiva: bono casi agotado o por caducar (no aplica a suscripción) */}
+                    {b.type !== 'subscription' && (restantes <= 2 || b.daysLeft <= 14) && (
+                      <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 12, background: PB.infoBg, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ flex: 1, fontSize: 12, color: PB.moradoInk, lineHeight: 1.4 }}>
+                          {restantes <= 2
+                            ? <span><strong>Te quedan {restantes} acceso{restantes !== 1 ? 's' : ''}.</strong> Renueva ahora y sigue ahorrando.</span>
+                            : <span><strong>Caduca pronto.</strong> Renueva y no pierdas tu ritmo.</span>}
+                        </div>
+                        <button onClick={() => onRenovar && onRenovar(b)} style={{ flexShrink: 0, padding: '9px 14px', borderRadius: 10, border: 0, background: PB.morado, color: '#fff', fontFamily: PB.font, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                          Renovar
+                        </button>
+                      </div>
+                    )}
 
                     {/* CTA */}
                     <button onClick={() => onReservar(b)} style={{

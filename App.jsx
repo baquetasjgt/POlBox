@@ -492,6 +492,12 @@ function App() {
           onBack={() => setScreen('profile')}
           onComprar={() => setScreen('bonos')}
           onReservar={(bono) => { setSelectedBono(bono); setScreen('select-sede'); }}
+          onRenovar={(bono) => {
+            const catalog = (window.BONO_CATALOG || []).find(c => c.id === bono.catalogId);
+            if (catalog) { setPendingBono(catalog); setScreen('bono-resumen'); }
+            else setScreen('bonos');
+            track('bono_renew_cta', { catalogId: bono.catalogId });
+          }}
         />;
       case 'bonos':
         return <ScreenBonos

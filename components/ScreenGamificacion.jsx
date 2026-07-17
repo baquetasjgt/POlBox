@@ -61,7 +61,7 @@ const RANKING = [
   { rank: 25, name: 'Laura Blanco',     initials: 'LB', xp:  360, levelName: 'Poler' },
 ];
 
-const ScreenGamificacion = ({ onBack, gameData }) => {
+const ScreenGamificacion = ({ onBack, gameData, onShare }) => {
   const [tab, setTab] = React.useState('progreso');
 
   const g = gameData || {
@@ -213,7 +213,7 @@ const ScreenGamificacion = ({ onBack, gameData }) => {
                   </div>
                 </div>
                 <div style={{ padding: '5px 12px', borderRadius: 10, background: PB.surface2, border: `1px solid ${PB.line}`, fontFamily: PB.mono, fontWeight: 700, fontSize: 11, color: PB.ink2, letterSpacing: '.06em' }}>
-                  PB-LAURA-042
+                  {g.referralCode || 'PB-LAURA-042'}
                 </div>
               </div>
 
@@ -236,7 +236,7 @@ const ScreenGamificacion = ({ onBack, gameData }) => {
                 </div>
               ))}
 
-              <button style={{ marginTop: 12, width: '100%', padding: '12px', borderRadius: 12, border: `1.5px solid ${PB.morado}`, background: 'transparent', fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.morado, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <button onClick={onShare} style={{ marginTop: 12, width: '100%', padding: '12px', borderRadius: 12, border: `1.5px solid ${PB.morado}`, background: 'transparent', fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.morado, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <Icon name="profile" size={15} color={PB.morado}/> Compartir código de invitación
               </button>
             </div>

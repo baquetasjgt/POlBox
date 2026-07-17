@@ -112,7 +112,12 @@ const TabBar = ({ active = 'home', locked = {}, onTab = () => {} }) => {
     { id: 'perfil',  label: 'Perfil',   icon: 'profile' },
   ];
   const handleTab = (id) => {
-    if (locked[id]) return;
+    if (locked[id]) {
+      // Tab bloqueada (invitada): en vez de un tap muerto, abre el registro
+      // con continuación hacia el destino tras autenticarse.
+      if (window.__pbLockedTab) window.__pbLockedTab(id);
+      return;
+    }
     onTab(id);
     if (window.__pbTabNav) window.__pbTabNav(id);
   };

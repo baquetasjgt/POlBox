@@ -53,9 +53,28 @@ const ScreenPaymentMethods = ({ onBack, onAdd, cards = [], setCards }) => {
 };
 
 // ─── Historial de reservas ───────────────────────────────────
-const ScreenHistory = ({ onBack }) => {
+const ScreenHistory = ({ onBack, bookings = [] }) => {
   const [open, setOpen] = React.useState(null); // selected booking
-  const items = [
+
+  // Reservas reales de la demo mapeadas al formato de la vista
+  const MESES_UP = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  const DOW_UP = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
+  const liveItems = (bookings || []).map(bk => {
+    const d = new Date(bk.dateISO + 'T00:00:00');
+    const base = bk.price / 1.21;
+    return {
+      id: bk.id, d: DOW_UP[d.getDay()], n: d.getDate(), m: MESES_UP[d.getMonth()],
+      dateLong: `${PBU.DIAS[d.getDay()]} ${d.getDate()} ${PBU.MESES[d.getMonth()]} ${d.getFullYear()}`,
+      hours: `${bk.startStr} – ${bk.endStr}`, box: bk.boxLabel, sede: bk.venueName,
+      dur: `${bk.duration} min`,
+      price: bk.method === 'bono' ? 'Bono' : PBU.fmtEUR(bk.price),
+      subtotal: PBU.fmtEUR(base), tax: PBU.fmtEUR(bk.price - base), total: PBU.fmtEUR(bk.price),
+      method: bk.method === 'bono' ? `Bono ${bk.bonoId || ''}` : (bk.methodLabel || 'Tarjeta'),
+      state: bk.state === 'cancelled' ? 'cancelled' : bk.state === 'upcoming' ? 'upcoming' : 'done',
+    };
+  });
+
+  const SEED_ITEMS = [
     { id: 'PB-2025-12-018', d: 'JUE', n: 18, m: 'DIC', dateLong: 'Jueves, 18 dic 2025',  hours: '18:00 – 19:30', box: 'BOX 1 · Industrial', sede: 'Madrid · Salamanca', dur: '90 min', price: '20,00 €', subtotal: '16,53 €', tax: '3,47 €', total: '20,00 €', method: 'Mastercard ••4242', state: 'upcoming' },
     { id: 'PB-2025-12-009', d: 'MAR', n: 9,  m: 'DIC', dateLong: 'Martes, 9 dic 2025',   hours: '19:00 – 20:00', box: 'BOX 2 · Neón',       sede: 'Madrid · Salamanca', dur: '60 min', price: '15,00 €', subtotal: '12,40 €', tax: '2,60 €', total: '15,00 €', method: 'Mastercard ••4242', state: 'done' },
     { id: 'PB-2025-12-006', d: 'SÁB', n: 6,  m: 'DIC', dateLong: 'Sábado, 6 dic 2025',   hours: '11:00 – 13:00', box: 'BOX 1 · Industrial', sede: 'Madrid · Chamberí',  dur: '120 min', price: '25,00 €', subtotal: '20,66 €', tax: '4,34 €', total: '25,00 €', method: 'Visa ••0119',       state: 'done' },
@@ -63,6 +82,7 @@ const ScreenHistory = ({ onBack }) => {
     { id: 'PB-2025-11-018', d: 'LUN', n: 18, m: 'NOV', dateLong: 'Lunes, 18 nov 2025',  hours: '17:00 – 18:30', box: 'BOX 1 · Industrial', sede: 'Madrid · Salamanca', dur: '90 min',  price: '20,00 €', subtotal: '16,53 €', tax: '3,47 €', total: '20,00 €', method: 'Mastercard ••4242', state: 'cancelled' },
     { id: 'PB-2025-11-014', d: 'JUE', n: 14, m: 'NOV', dateLong: 'Jueves, 14 nov 2025', hours: '18:00 – 19:00', box: 'BOX 2 · Neón',       sede: 'Madrid · Chamberí',  dur: '60 min',  price: '15,00 €', subtotal: '12,40 €', tax: '2,60 €', total: '15,00 €', method: 'Visa ••0119',       state: 'done' },
   ];
+  const items = [...liveItems, ...SEED_ITEMS];
   const tone = (s) => s === 'upcoming' ? { bg: PB.successBg, fg: PB.success, label: 'Próxima' }
                     : s === 'cancelled' ? { bg: PB.dangerBg, fg: PB.danger, label: 'Cancelada' }
                     : { bg: PB.surface2, fg: PB.ink3, label: 'Completada' };
@@ -660,10 +680,19 @@ Object.assign(window, {
 });
 
 // ─── Historial de pedidos (tienda) ──────────────────────────
-const ScreenOrderHistory = ({ onBack }) => {
+const ScreenOrderHistory = ({ onBack, orders: realOrders = [] }) => {
   const [open, setOpen] = React.useState(null);
 
-  const orders = [
+  // Pedidos reales de la demo (persistidos en App) mapeados al formato de la vista
+  const liveOrders = (realOrders || []).map(o => ({
+    id: o.id, date: o.dateLabel, delivery: o.delivery,
+    venueName: o.pickup?.venueName, lockerId: o.pickup?.lockerId, lockerCode: o.lockerCode,
+    addr: o.address ? `${o.address.calle || ''}, ${o.address.ciudad || ''}` : undefined,
+    items: o.items, shipping: o.delivery === 'home' ? PBU.SHIPPING_COST : 0,
+    state: o.delivery === 'locker' ? 'en-locker' : 'enviado', method: 'Mastercard ••4242',
+  }));
+
+  const SEED_ORDERS = [
     { id: 'PB-ORD-00042', date: '12 dic 2025', delivery: 'locker', venueName: 'Salamanca', lockerId: 'L2', lockerCode: '7483', items: [{name:'Magnesio líquido',qty:2,price:8.50},{name:'Dry Hands',qty:1,price:12.00}], shipping: 0, state: 'entregado', method: 'Mastercard ••4242' },
     { id: 'PB-ORD-00038', date: '4 dic 2025',  delivery: 'home',   addr: 'C/ Velázquez 42, Madrid', items: [{name:'Shorts pole',qty:1,price:28.00},{name:'Calcetines grip',qty:2,price:9.00}], shipping: 4.99, state: 'enviado', tracking: 'CE123456789ES', method: 'Apple Pay',
       trackingEvents: [
@@ -678,14 +707,16 @@ const ScreenOrderHistory = ({ onBack }) => {
     { id: 'PB-ORD-00024', date: '8 nov 2025',  delivery: 'home',   addr: 'C/ Velázquez 42, Madrid', items: [{name:'Top sin tirantes',qty:1,price:24.00}], shipping: 4.99, state: 'entregado', method: 'Visa ••0119' },
     { id: 'PB-ORD-00019', date: '28 oct 2025', delivery: 'locker', venueName: 'Salamanca',  lockerId: 'L3', lockerCode: '5512', items: [{name:'Magnesio líquido',qty:1,price:8.50},{name:'Toalla microfibra',qty:1,price:12.00}], shipping: 0, state: 'entregado', method: 'Google Pay' },
   ];
+  const orders = [...liveOrders, ...SEED_ORDERS];
 
-  const fmt   = (n) => n.toFixed(2).replace('.', ',') + ' €';
+  const fmt   = PBU.fmtEUR;
   const total = (o) => o.items.reduce((s, i) => s + i.price * i.qty, 0) + o.shipping;
 
   const tone = (s) => ({
-    entregado: { bg: PB.successBg, fg: PB.success, label: 'Entregado' },
-    enviado:   { bg: PB.warnBg,    fg: PB.warn,    label: 'En camino' },
-    pendiente: { bg: PB.surface2,  fg: PB.ink3,    label: 'Pendiente' },
+    entregado:   { bg: PB.successBg, fg: PB.success, label: 'Entregado' },
+    enviado:     { bg: PB.warnBg,    fg: PB.warn,    label: 'En camino' },
+    'en-locker': { bg: PB.mentaSoft, fg: PB.morado,  label: 'En locker' },
+    pendiente:   { bg: PB.surface2,  fg: PB.ink3,    label: 'Pendiente' },
   }[s] || { bg: PB.surface2, fg: PB.ink3, label: s });
 
   const totalGastado = orders.reduce((s, o) => s + total(o), 0);

@@ -6,14 +6,9 @@ const ScreenStoreCart = ({ onBack, cart, setCart, onDelivery }) => {
   const add    = (id) => setCart(c => ({ ...c, [id]: (c[id] || 0) + 1 }));
   const remove = (id) => setCart(c => { const n = { ...c }; if (n[id] > 1) n[id]--; else delete n[id]; return n; });
 
-  const subtotal = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
-    return sum + (p ? p.price * qty : 0);
-  }, 0);
-  const shipping = method === 'home' ? 4.99 : 0;
-  const total    = subtotal + shipping;
-  const fmt      = (n) => n.toFixed(2).replace('.', ',') + ' €';
-  const items    = Object.entries(cart).filter(([, q]) => q > 0);
+  const { subtotal, shipping, total } = PBU.cartTotals(cart, method);
+  const fmt   = PBU.fmtEUR;
+  const items = Object.entries(cart).filter(([, q]) => q > 0);
 
   const methods = [
     {
@@ -29,8 +24,8 @@ const ScreenStoreCart = ({ onBack, cart, setCart, onDelivery }) => {
       id: 'home',
       icon: 'refresh',
       title: 'Envío a domicilio',
-      sub: '4,99 € · 3–5 días hábiles · Correos Express',
-      badge: '4,99 €',
+      sub: `${PBU.fmtEUR(PBU.SHIPPING_COST)} · 3–5 días hábiles · Correos Express`,
+      badge: PBU.fmtEUR(PBU.SHIPPING_COST),
       badgeColor: PB.warn,
       badgeBg: PB.warnBg,
     },

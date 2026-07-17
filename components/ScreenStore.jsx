@@ -1,16 +1,5 @@
 // POLEBOX — Tienda: catálogo de productos
-
-const STORE_PRODUCTS = [
-  { id: 1, cat: 'grip',       name: 'Magnesio líquido',  sub: 'Mighty Grip · 50 ml',    price: 8.50,  icon: 'bolt',    color: '#F5F2EC', badge: 'Más vendido' },
-  { id: 2, cat: 'grip',       name: 'Tiza en polvo',     sub: 'Chalk Block · 56 g',     price: 5.00,  icon: 'sparkle', color: '#F5F2EC' },
-  { id: 3, cat: 'grip',       name: 'Dry Hands',         sub: 'Grip líquido · 45 ml',   price: 12.00, icon: 'bolt',    color: '#F5F2EC' },
-  { id: 4, cat: 'accesorios', name: 'Rodilleras pole',   sub: 'ProGrip · el par',       price: 18.00, icon: 'shield',  color: '#ECE4F9', badge: 'Nuevo' },
-  { id: 5, cat: 'accesorios', name: 'Calcetines grip',   sub: 'Non-slip · talla única', price: 9.00,  icon: 'users',   color: '#ECE4F9' },
-  { id: 6, cat: 'accesorios', name: 'Toalla microfibra', sub: '40×80 cm · POLEBOX',     price: 12.00, icon: 'refresh', color: '#ECE4F9' },
-  { id: 7, cat: 'ropa',       name: 'Shorts pole',       sub: 'POLEBOX · XS–XL',        price: 28.00, icon: 'profile', color: '#C6F2DD' },
-  { id: 8, cat: 'ropa',       name: 'Top sin tirantes',  sub: 'POLEBOX · XS–XL',        price: 24.00, icon: 'profile', color: '#C6F2DD' },
-];
-window.STORE_PRODUCTS = STORE_PRODUCTS;
+// Catálogo en data/products.js (window.STORE_PRODUCTS)
 
 const ScreenStore = ({ onBack, onCart, cart, setCart }) => {
   const [cat, setCat] = React.useState('todo');
@@ -26,12 +15,9 @@ const ScreenStore = ({ onBack, onCart, cart, setCart }) => {
   const add    = (id) => setCart(c => ({ ...c, [id]: (c[id] || 0) + 1 }));
   const remove = (id) => setCart(c => { const n = { ...c }; if (n[id] > 1) n[id]--; else delete n[id]; return n; });
 
-  const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
-  const totalPrice = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
-    return sum + (p ? p.price * qty : 0);
-  }, 0);
-  const fmt = (n) => n.toFixed(2).replace('.', ',') + ' €';
+  const totalItems = PBU.cartCount(cart);
+  const totalPrice = PBU.cartSubtotal(cart);
+  const fmt = PBU.fmtEUR;
 
   return (
     <>
@@ -48,7 +34,7 @@ const ScreenStore = ({ onBack, onCart, cart, setCart }) => {
         <div style={{ margin: '0 16px 16px', display: 'flex', gap: 8 }}>
           {[
             { icon: 'bolt',    label: 'Locker en sede',    sub: 'Gratis', bg: PB.mentaSoft },
-            { icon: 'refresh', label: 'Envío a domicilio', sub: 'desde 4,99 €', bg: PB.surface2 },
+            { icon: 'refresh', label: 'Envío a domicilio', sub: `desde ${PBU.fmtEUR(PBU.SHIPPING_COST)}`, bg: PB.surface2 },
           ].map(m => (
             <div key={m.label} style={{ flex: 1, padding: '10px 12px', borderRadius: 14, background: m.bg, border: `1px solid ${PB.line}`, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Icon name={m.icon} size={16} color={PB.morado}/>

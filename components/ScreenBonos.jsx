@@ -1,47 +1,6 @@
 // POLEBOX — Catálogo de bonos de acceso
-
-const BONO_CATALOG = [
-  { id: 'b5-60',   name: 'Bono Inicio',      accesos: 5,  min: 60, price: 69,  perAcceso: 13.80, saving: 21, caducidadDias: 60 },
-  { id: 'b5-90',   name: 'Bono Inicio Pro',  accesos: 5,  min: 90, price: 89,  perAcceso: 17.80, saving: 19, caducidadDias: 60 },
-  { id: 'b10-60',  name: 'Bono Mensual',     accesos: 10, min: 60, price: 120, perAcceso: 12.00, saving: 33, caducidadDias: 90, popular: true },
-  { id: 'b10-90',  name: 'Bono Mensual Pro', accesos: 10, min: 90, price: 149, perAcceso: 14.90, saving: 32, caducidadDias: 90 },
-  { id: 'b10-90m', name: 'Bono Mañanas',     accesos: 10, min: 90, price: 132, perAcceso: 13.20, saving: 40, caducidadDias: 90,
-    morning: true, schedule: { days: 'Lun–Vie', from: '09:00', to: '14:00', lastEntry: '12:30' } },
-];
-window.BONO_CATALOG = BONO_CATALOG;
-
-const CARD_THEMES = {
-  'b5-60':  {
-    bg: 'linear-gradient(140deg, #1b4a42 0%, #0d2e28 45%, #163d36 100%)',
-    accent: '#4ecdc4',
-    glow: 'rgba(78,205,196,.35)',
-    shimmer: 'rgba(78,205,196,.18)',
-  },
-  'b5-90':  {
-    bg: 'linear-gradient(140deg, #22204e 0%, #131130 45%, #1e1c44 100%)',
-    accent: '#9b8ffc',
-    glow: 'rgba(155,143,252,.32)',
-    shimmer: 'rgba(155,143,252,.2)',
-  },
-  'b10-60': {
-    bg: 'linear-gradient(140deg, #3e1478 0%, #1f0844 45%, #310f62 100%)',
-    accent: '#c9a8ff',
-    glow: 'rgba(72,35,128,.5)',
-    shimmer: 'rgba(201,168,255,.22)',
-  },
-  'b10-90': {
-    bg: 'linear-gradient(140deg, #201608 0%, #100c04 45%, #281c0a 100%)',
-    accent: '#ffd166',
-    glow: 'rgba(255,209,102,.28)',
-    shimmer: 'rgba(255,209,102,.2)',
-  },
-  'b10-90m': {
-    bg: 'linear-gradient(140deg, #2e1600 0%, #1c0e00 45%, #361a00 100%)',
-    accent: '#ff9f43',
-    glow: 'rgba(255,159,67,.35)',
-    shimmer: 'rgba(255,159,67,.2)',
-  },
-};
+// Catálogo, temas de tarjeta y condiciones en data/bonos.js
+// (window.BONO_CATALOG, window.CARD_THEMES, window.getConditions)
 
 const BonoCard = ({ b, onClick }) => {
   const th = CARD_THEMES[b.id];
@@ -212,20 +171,6 @@ const ScreenBonos = ({ onBack, onSelect }) => {
   );
 };
 
-const BASE_CONDITIONS = [
-  'Personal e intransferible. Solo puede usarlo la titular de la cuenta.',
-  'La caducidad comienza en la fecha de compra, no de primer uso.',
-  'Los accesos no utilizados al vencer el plazo no se reembolsan.',
-  'Cancelación con más de 24 h de antelación: el acceso se reintegra al bono.',
-  'Cancelación con menos de 24 h: el acceso se consume sin posibilidad de recuperación.',
-  'No acumulable con otras promociones, descuentos o códigos.',
-  'Válido en todas las sedes de POLEBOX.',
-  'POLEBOX se reserva el derecho a cancelar sesiones por causas de fuerza mayor, reintegrando el acceso al bono.',
-];
-const getConditions = (bono) => bono.schedule
-  ? [`Uso exclusivo de mañanas: válido de ${bono.schedule.days} de ${bono.schedule.from} a ${bono.schedule.to}. Última entrada a las ${bono.schedule.lastEntry}.`, ...BASE_CONDITIONS]
-  : BASE_CONDITIONS;
-
 const ScreenBonoResumen = ({ bono, onBack, onPay }) => {
   if (!bono) return null;
   const th = CARD_THEMES[bono.id];
@@ -319,4 +264,4 @@ const ScreenBonoResumen = ({ bono, onBack, onPay }) => {
 
 window.ScreenBonos = ScreenBonos;
 window.ScreenBonoResumen = ScreenBonoResumen;
-window.CARD_THEMES = CARD_THEMES;
+window.BonoCard = BonoCard;

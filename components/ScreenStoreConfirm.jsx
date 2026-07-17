@@ -5,11 +5,8 @@ const ScreenStoreConfirm = ({ onDone, delivery, address, pickup, cart }) => {
   const lockerCode = React.useMemo(() => Math.floor(1000 + Math.random() * 9000).toString(), []);
 
   const items = Object.entries(cart || {}).filter(([, q]) => q > 0);
-  const fmt   = (n) => n.toFixed(2).replace('.', ',') + ' €';
-  const total = items.reduce((sum, [id, qty]) => {
-    const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
-    return sum + (p ? p.price * qty : 0);
-  }, 0) + (delivery === 'home' ? 4.99 : 0);
+  const fmt   = PBU.fmtEUR;
+  const total = PBU.cartTotals(cart, delivery).total;
 
   return (
     <>

@@ -1,12 +1,5 @@
 // POLEBOX — Selector de sede y locker para recogida
-
-const STORE_VENUES = [
-  { id: 'mad-salamanca', name: 'Salamanca',  city: 'Madrid',    addr: 'C/ Velázquez 42 · 28001', lockers: 4, dist: '0,8 km' },
-  { id: 'mad-chamberi',  name: 'Chamberí',   city: 'Madrid',    addr: 'C/ Fuencarral 120 · 28010', lockers: 2, dist: '2,1 km' },
-  { id: 'mad-malasana',  name: 'Malasaña',   city: 'Madrid',    addr: 'C/ Espíritu Santo 8 · 28004', lockers: 3, dist: '3,4 km' },
-  { id: 'bcn-gracia',    name: 'Gràcia',     city: 'Barcelona', addr: 'C/ Verdi 60 · 08012', lockers: 5, dist: '612 km' },
-];
-window.STORE_VENUES = STORE_VENUES;
+// Sedes derivadas del dataset canónico en data/venues.js (window.STORE_VENUES)
 
 const ScreenStorePickup = ({ onBack, onConfirm }) => {
   const [venueId, setVenueId] = React.useState(null);

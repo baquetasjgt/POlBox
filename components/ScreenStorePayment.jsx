@@ -3,7 +3,7 @@
 const ScreenStorePayment = ({ onBack, total, onSuccess }) => {
   const [method, setMethod] = React.useState('card');
   const [phase, setPhase]   = React.useState('form'); // form | processing | done
-  const fmt = (n) => n.toFixed(2).replace('.', ',') + ' €';
+  const fmt = PBU.fmtEUR;
 
   const methods = [
     { id: 'apple',  label: 'Apple Pay',  sub: 'Touch ID / Face ID' },
@@ -12,11 +12,16 @@ const ScreenStorePayment = ({ onBack, total, onSuccess }) => {
     { id: 'bizum',  label: 'Bizum',      sub: 'Desde tu móvil' },
   ];
 
+  // Encadenado por fase: con deps [phase], un solo efecto que programara ambos
+  // timers limpiaría el de onSuccess al pasar a 'done' y nunca se navegaría.
   React.useEffect(() => {
     if (phase === 'processing') {
-      const t1 = setTimeout(() => setPhase('done'), 1400);
-      const t2 = setTimeout(() => onSuccess && onSuccess(), 2600);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
+      const t = setTimeout(() => setPhase('done'), 1400);
+      return () => clearTimeout(t);
+    }
+    if (phase === 'done') {
+      const t = setTimeout(() => onSuccess && onSuccess(), 1200);
+      return () => clearTimeout(t);
     }
   }, [phase]);
 

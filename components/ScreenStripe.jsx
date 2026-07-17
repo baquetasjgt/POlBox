@@ -12,11 +12,16 @@ const ScreenStripe = ({ booking, onBack, onSuccess }) => {
     return () => clearTimeout(t);
   }, []);
 
+  // Encadenado por fase: un solo efecto con deps [phase] limpiaría el timer
+  // de onSuccess al pasar a 'done' y el pago nunca navegaría a la llave.
   React.useEffect(() => {
     if (phase === 'processing') {
-      const t1 = setTimeout(() => setPhase('done'), 1600);
-      const t2 = setTimeout(() => onSuccess && onSuccess(b), 2700);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
+      const t = setTimeout(() => setPhase('done'), 1600);
+      return () => clearTimeout(t);
+    }
+    if (phase === 'done') {
+      const t = setTimeout(() => onSuccess && onSuccess(b), 1100);
+      return () => clearTimeout(t);
     }
   }, [phase]);
 

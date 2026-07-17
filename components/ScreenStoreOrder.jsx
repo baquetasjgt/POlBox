@@ -1,14 +1,9 @@
 // POLEBOX — Resumen completo del pedido antes de pagar
 
 const ScreenStoreOrder = ({ onBack, cart, delivery, address, pickup, onPay }) => {
-  const subtotal = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const p = STORE_PRODUCTS.find(p => p.id === parseInt(id));
-    return sum + (p ? p.price * qty : 0);
-  }, 0);
-  const shipping = delivery === 'home' ? 4.99 : 0;
-  const total    = subtotal + shipping;
-  const fmt      = (n) => n.toFixed(2).replace('.', ',') + ' €';
-  const items    = Object.entries(cart).filter(([, q]) => q > 0);
+  const { subtotal, shipping, total } = PBU.cartTotals(cart, delivery);
+  const fmt   = PBU.fmtEUR;
+  const items = Object.entries(cart).filter(([, q]) => q > 0);
 
   return (
     <>
@@ -81,7 +76,7 @@ const ScreenStoreOrder = ({ onBack, cart, delivery, address, pickup, onPay }) =>
                 <div style={{ fontSize: 12, color: PB.ink3 }}>{address.calle}</div>
                 <div style={{ fontSize: 12, color: PB.ink3 }}>{address.cp} {address.ciudad}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-                  <span style={{ padding: '3px 8px', borderRadius: 999, background: PB.warnBg, color: PB.warn, fontSize: 10, fontWeight: 800 }}>4,99 €</span>
+                  <span style={{ padding: '3px 8px', borderRadius: 999, background: PB.warnBg, color: PB.warn, fontSize: 10, fontWeight: 800 }}>{PBU.fmtEUR(PBU.SHIPPING_COST)}</span>
                   <span style={{ fontSize: 11, color: PB.ink3 }}>· 3–5 días hábiles · Correos Express</span>
                 </div>
               </div>

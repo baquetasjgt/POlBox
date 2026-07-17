@@ -68,40 +68,16 @@ const Screen3Book = ({ onBack, onPay, selectedBono, userCurso, venue }) => {
     return slots.sort((a, b) => a.s - b.s);
   }, [venue?.id, dayIdx, boxIdx]);
 
-  // ─── Anti-gap slot generator ─────────────────────────────
-  // Candidato válido de arranque si:
-  //  a) pegado a una reserva anterior (= end de otra) o al OPEN,
-  //  b) su fin está pegado a una reserva posterior (= start de otra) o al CLOSE,
-  //  c) cae en :00 o :30 (ritmo del grid),
-  // y no pisa ninguna reserva.
-  const candidates = React.useMemo(() => {
-    const starts = new Set();
-    // Anclas "pegadas": inicios pegados a algo → no genera hueco previo
-    starts.add(OPEN);
-    existing.forEach(r => starts.add(r.e));
-    // Extra: cada :00 y :30 entre OPEN y CLOSE (se filtra abajo si crea huecos)
-    for (let t = OPEN; t <= CLOSE - duration; t += 30) starts.add(t);
-
-    const list = [];
-    [...starts].sort((a,b) => a-b).forEach(s => {
-      const e = s + duration;
-      if (s < OPEN || e > CLOSE) return;
-      // no solapa con existentes
-      if (existing.some(r => !(e <= r.s || s >= r.e))) return;
-      // gap-previo: o empieza en OPEN, o en end de alguna reserva, o en una ancla :00/:30 permitida (sin crear gap <30 min contra reserva previa)
-      const prev = existing.filter(r => r.e <= s).sort((a,b) => b.e - a.e)[0];
-      const prevEnd = prev ? prev.e : OPEN;
-      const gapBefore = s - prevEnd;
-      if (gapBefore > 0 && gapBefore < 30) return; // hueco muerto <30 min ⇒ oculto
-      // gap-posterior
-      const next = existing.filter(r => r.s >= e).sort((a,b) => a.s - b.s)[0];
-      const nextStart = next ? next.s : CLOSE;
-      const gapAfter = nextStart - e;
-      if (gapAfter > 0 && gapAfter < 30) return;
-      list.push(s);
-    });
-    return list;
-  }, [duration, boxIdx, existing]);
+  // ─── Anti-gap slot generator (PBU.antiGapSlots, lógica pura en utils.js) ──
+  // Con `durations`, un hueco solo se permite si es exactamente rellenable con
+  // las duraciones reservables: garantiza 0 huecos muertos (verificado con
+  // scripts/test-antigap.mjs sobre 560 escenarios). La versión anterior usaba
+  // un umbral de 30 min — por debajo de la reserva mínima (45), así que el
+  // 27,7% de las horas ofrecidas dejaba huecos invendibles.
+  const candidates = React.useMemo(() => PBU.antiGapSlots({
+    existing, duration, open: OPEN, close: CLOSE,
+    durations: allDurations.map(d => d.min),
+  }), [duration, existing]);
 
   // Precio por franja: valle (antes de las 14:00) −20% en reserva suelta
   const isValle = (s) => !selectedBono && s + duration <= PB_VALLE_LIMIT;

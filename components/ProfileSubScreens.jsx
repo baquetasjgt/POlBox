@@ -354,7 +354,7 @@ const ScreenContract = ({ onBack }) => {
     {
       emoji: '🧴',
       title: 'Preparación y calzado',
-      tone: PB.morado, toneBg: PB.info_bg || 'rgba(72,35,128,.08)',
+      tone: PB.morado, toneBg: PB.infoBg,
       rules: [
         { t: 'Cero cremas corporales o aceites el día de tu entrenamiento', s: 'Hacen que la barra resbale y comprometen tu seguridad y la de la siguiente persona.' },
         { t: 'Calzado: descalza, calcetines o tacones específicos de pole (tipo Pleasers)', s: 'Prohibido el calzado de calle en la zona de baile y colchonetas.' },
@@ -374,7 +374,7 @@ const ScreenContract = ({ onBack }) => {
     {
       emoji: '🧹',
       title: 'Higiene y respeto',
-      tone: PB.menta_deep || PB.success, toneBg: PB.successBg,
+      tone: PB.mentaDeep, toneBg: PB.successBg,
       rules: [
         { t: 'No dejes botellas, pañuelos ni restos de magnesio en el suelo', s: 'Usa la papelera del box.' },
         { t: 'Apaga luces, aire acondicionado y altavoz Bluetooth antes de salir', s: 'Desde la app o los interruptores del box.' },

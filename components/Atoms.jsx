@@ -10,8 +10,18 @@ const PB = {
   success: '#238F5B', successBg: '#E4F6EC',
   warn: '#B67A12', warnBg: '#FBF0D9',
   danger: '#B23040', dangerBg: '#FBE6E9',
+  info: '#482380', infoBg: '#ECE4F9',
   font: 'Archivo, system-ui, -apple-system, sans-serif',
   mono: '"JetBrains Mono", ui-monospace, Menlo, monospace',
+  // Tokens de layout/motion (espejo de colors_and_type.css, antes solo en CSS)
+  radiusXs: 6, radiusSm: 10, radiusMd: 14, radiusLg: 20, radiusXl: 28, radiusPill: 999,
+  space: [0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64],
+  shadow1: '0 1px 2px rgba(20,19,24,.04), 0 1px 1px rgba(20,19,24,.03)',
+  shadow2: '0 4px 14px rgba(20,19,24,.06), 0 1px 2px rgba(20,19,24,.04)',
+  shadow3: '0 14px 40px rgba(72,35,128,.12), 0 2px 6px rgba(20,19,24,.05)',
+  ease: 'cubic-bezier(.2,.7,.2,1)',
+  easeOut: 'cubic-bezier(0,.6,.2,1)',
+  durFast: '120ms', dur: '220ms', durSlow: '400ms',
 };
 
 // ── Icons (Lucide-style, stroke 1.75) ────────────────────────────
@@ -165,7 +175,9 @@ const Eyebrow = ({ children, color = PB.morado }) => (
 );
 
 // ── Primary button ──
-const Button = ({ children, onClick, variant = 'primary', full = false, icon, style = {} }) => {
+// disabled: atributo real + aria-disabled (nada de opacity + onClick undefined).
+// loading: spinner + aria-busy; bloquea el click mientras procesa.
+const Button = ({ children, onClick, variant = 'primary', full = false, icon, style = {}, disabled = false, loading = false, hint }) => {
   const styles = {
     primary:  { background: PB.morado, color: '#fff', border: '0' },
     secondary:{ background: PB.surface, color: PB.ink, border: `1px solid ${PB.lineStrong}` },
@@ -173,16 +185,33 @@ const Button = ({ children, onClick, variant = 'primary', full = false, icon, st
     mint:     { background: PB.menta, color: PB.moradoInk, border: '0' },
     danger:   { background: PB.dangerBg, color: PB.danger, border: '0' },
   }[variant];
+  const off = disabled || loading;
   return (
-    <button onClick={onClick} style={{
-      ...styles, padding: '15px 20px', borderRadius: 14, fontFamily: PB.font, fontWeight: 700,
-      fontSize: 15, letterSpacing: '-.005em', cursor: 'pointer',
-      width: full ? '100%' : 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-      transition: 'all 220ms cubic-bezier(.2,.7,.2,1)', ...style,
-    }}>
-      {icon && <Icon name={icon} size={18}/>}
-      {children}
-    </button>
+    <>
+      <button
+        onClick={off ? undefined : onClick}
+        disabled={off}
+        aria-disabled={off || undefined}
+        aria-busy={loading || undefined}
+        style={{
+          ...styles, padding: '15px 20px', borderRadius: PB.radiusMd, fontFamily: PB.font, fontWeight: 700,
+          fontSize: 15, letterSpacing: '-.005em', cursor: off ? 'not-allowed' : 'pointer',
+          width: full ? '100%' : 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          opacity: disabled && !loading ? .45 : 1,
+          transition: `all ${PB.dur} ${PB.ease}`, ...style,
+        }}>
+        {loading ? (
+          <>
+            <span style={{ width: 16, height: 16, borderRadius: 999, border: '2.5px solid rgba(255,255,255,.4)', borderTopColor: 'currentColor', display: 'inline-block', animation: 'pb-btn-spin 700ms linear infinite' }}/>
+            <style>{`@keyframes pb-btn-spin{to{transform:rotate(360deg)}}`}</style>
+          </>
+        ) : icon && <Icon name={icon} size={18}/>}
+        {children}
+      </button>
+      {hint && disabled && !loading && (
+        <div style={{ marginTop: 8, fontSize: 12, color: PB.ink3, textAlign: 'center', fontFamily: PB.font }}>{hint}</div>
+      )}
+    </>
   );
 };
 

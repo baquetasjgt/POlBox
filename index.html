@@ -11,9 +11,11 @@
   button:focus-visible { outline: 2px solid #482380; outline-offset: 2px; }
   *::-webkit-scrollbar { width: 0; height: 0; }
 </style>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<!-- Dependencias vendorizadas (react@18.3.1, react-dom@18.3.1, @babel/standalone@7.29.0):
+     la demo funciona offline y sin depender de un CDN en runtime. -->
+<script src="vendor/react.development.js"></script>
+<script src="vendor/react-dom.development.js"></script>
+<script src="vendor/babel.min.js"></script>
 </head>
 <body>
 <div id="root"></div>

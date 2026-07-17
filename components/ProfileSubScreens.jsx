@@ -12,12 +12,10 @@ const ProfileHeader = ({ title, onBack, right }) => (
 );
 
 // ─── Métodos de pago ─────────────────────────────────────────
-const ScreenPaymentMethods = ({ onBack, onAdd }) => {
-  const [defId, setDefId] = React.useState('mc');
-  const cards = [
-    { id: 'mc', brand: 'Mastercard', last: '4242', exp: '12/28', color: '#1A1F36' },
-    { id: 'visa', brand: 'Visa',     last: '0119', exp: '08/27', color: '#1A1F71' },
-  ];
+// Las tarjetas viven en el estado global de App (persistidas): la tarjeta
+// añadida en ScreenAddPayment aparece aquí y el "por defecto" sobrevive.
+const ScreenPaymentMethods = ({ onBack, onAdd, cards = [], setCards }) => {
+  const setDefault = (id) => setCards && setCards(prev => prev.map(c => ({ ...c, isDefault: c.id === id })));
   const Brand = ({ b }) => b === 'Mastercard'
     ? <div style={{ display: 'flex' }}><div style={{ width: 18, height: 18, borderRadius: 999, background: '#EB001B' }}/><div style={{ width: 18, height: 18, borderRadius: 999, background: '#F79E1B', marginLeft: -8, mixBlendMode: 'multiply' }}/></div>
     : <div style={{ fontFamily: 'system-ui', fontWeight: 900, fontSize: 14, color: '#fff', letterSpacing: '.04em', fontStyle: 'italic' }}>VISA</div>;
@@ -31,12 +29,12 @@ const ScreenPaymentMethods = ({ onBack, onAdd }) => {
             <div key={c.id} style={{ borderRadius: 18, padding: 18, background: `linear-gradient(135deg, ${c.color}, #2c1d6b)`, color: '#fff', position: 'relative', boxShadow: '0 10px 24px rgba(20,19,24,.18)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <Brand b={c.brand}/>
-                {defId === c.id && <span style={{ padding: '3px 9px', borderRadius: 999, background: PB.menta, color: PB.moradoInk, fontSize: 10, fontWeight: 800, letterSpacing: '.08em' }}>POR DEFECTO</span>}
+                {c.isDefault && <span style={{ padding: '3px 9px', borderRadius: 999, background: PB.menta, color: PB.moradoInk, fontSize: 10, fontWeight: 800, letterSpacing: '.08em' }}>POR DEFECTO</span>}
               </div>
               <div style={{ marginTop: 28, fontFamily: PB.mono, fontWeight: 700, fontSize: 18, letterSpacing: '.16em' }}>•••• •••• •••• {c.last}</div>
               <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, opacity: .85 }}>
                 <span>Caduca {c.exp}</span>
-                <button onClick={() => setDefId(c.id)} style={{ background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,.3)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>{defId === c.id ? 'Editar' : 'Por defecto'}</button>
+                <button onClick={() => setDefault(c.id)} style={{ background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,.3)', borderRadius: 999, padding: '5px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>{c.isDefault ? 'Editar' : 'Por defecto'}</button>
               </div>
             </div>
           ))}

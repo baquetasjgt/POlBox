@@ -1,7 +1,9 @@
-// POLEBOX — Checkout: resumen de reserva + método de pago
+// POLEBOX — Checkout: resumen de reserva + método de pago + promociones
 
-const ScreenCheckout = ({ booking, onBack, onPay, userBonos }) => {
-  const b = booking || { dayLabel: 'Jue 15', startStr: '18:00', endStr: '19:30', duration: 90, boxIdx: 0, price: 20 };
+const ScreenCheckout = ({ booking, onBack, onPay, userBonos, isFirstBooking }) => {
+  // El guard del router garantiza que booking existe; el fallback solo protege
+  // usos fuera del flujo normal.
+  const b = booking || { dayLabel: 'Hoy', startStr: '18:00', endStr: '19:30', duration: 90, boxIdx: 0, price: 20 };
 
   // Detectar bono compatible con la duración seleccionada
   const compatibleBono = (userBonos || []).find(
@@ -9,6 +11,27 @@ const ScreenCheckout = ({ booking, onBack, onPay, userBonos }) => {
   );
 
   const [method, setMethod] = React.useState(compatibleBono ? 'bono' : 'card');
+
+  // ── Promociones ───────────────────────────────────────────
+  // -50% primera sesión (la promesa del hero de la home, ahora aplicada de
+  // verdad) + código promocional manual.
+  const [promoCode, setPromoCode] = React.useState('');
+  const [promoState, setPromoState] = React.useState(null); // null | 'ok' | 'error'
+  const [showPromoInput, setShowPromoInput] = React.useState(false);
+  const PROMO_CODES = { 'POLE10': 0.10, 'AMIGA50': 0.50 };
+
+  const usingBonoPre = method === 'bono';
+  const firstOff = isFirstBooking && !usingBonoPre ? PBU.FIRST_BOOKING_DISCOUNT : 0;
+  const codeOff = promoState === 'ok' ? (PROMO_CODES[promoCode.trim().toUpperCase()] || 0) : 0;
+  // No acumulables: se aplica el mayor descuento
+  const discount = Math.max(firstOff, codeOff);
+  const discountLabel = discount === 0 ? null
+    : (firstOff >= codeOff ? 'Primera sesión −50%' : `Código ${promoCode.trim().toUpperCase()} −${Math.round(codeOff * 100)}%`);
+  const finalPrice = Math.round(b.price * (1 - discount) * 100) / 100;
+
+  const applyPromo = () => {
+    setPromoState(PROMO_CODES[promoCode.trim().toUpperCase()] ? 'ok' : 'error');
+  };
 
   const payMethods = [
     { id: 'apple',  label: 'Apple Pay',  sub: 'Touch ID o Face ID', cta: 'Pagar con Apple Pay' },
@@ -54,36 +77,65 @@ const ScreenCheckout = ({ booking, onBack, onPay, userBonos }) => {
         <div style={{ margin: '0 16px 12px', padding: 18, borderRadius: 22, background: PB.surface, border: `1px solid ${PB.line}` }}>
           <Eyebrow>Tu reserva</Eyebrow>
           <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 22, letterSpacing: '-0.015em', margin: '8px 0 4px' }}>
-            BOX {b.boxIdx + 1} · {b.boxIdx === 0 ? 'Industrial' : 'Neón'}
+            {b.boxLabel || `BOX ${b.boxIdx + 1}`}
           </h3>
-          <div style={{ color: PB.ink3, fontSize: 13 }}>POLEBOX Madrid · Salamanca</div>
+          <div style={{ color: PB.ink3, fontSize: 13 }}>POLEBOX {b.venueName || 'Madrid · Salamanca'}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
-            <Cell k="Día"      v={b.dayLabel}/>
-            <Cell k="Duración" v={`${b.duration} min`}/>
-            <Cell k="Inicio"   v={b.startStr + 'h'} mono/>
-            <Cell k="Fin"      v={b.endStr + 'h'} mono/>
+            <CheckoutCell k="Día"      v={b.dayLabel}/>
+            <CheckoutCell k="Duración" v={`${b.duration} min`}/>
+            <CheckoutCell k="Inicio"   v={b.startStr + 'h'} mono/>
+            <CheckoutCell k="Fin"      v={b.endStr + 'h'} mono/>
           </div>
         </div>
 
         {/* Desglose */}
         <div style={{ margin: '0 16px 12px', padding: '14px 18px', borderRadius: 18, background: PB.surface, border: `1px solid ${PB.line}` }}>
           {usingBono ? (<>
-            <Line k={`Box · ${b.duration} min`} v={`${b.price},00 €`} strike/>
-            <Line k="Descuento bono" v={`−${b.price},00 €`} green/>
+            <CheckoutLine k={`Box · ${b.duration} min`} v={`${b.price},00 €`} strike/>
+            <CheckoutLine k="Descuento bono" v={`−${b.price},00 €`} green/>
             <div style={{ height: 1, background: PB.line, margin: '10px 0' }}/>
-            <Line k={<strong style={{ fontWeight: 800, fontSize: 15 }}>Total</strong>}
+            <CheckoutLine k={<strong style={{ fontWeight: 800, fontSize: 15 }}>Total</strong>}
                   v={<span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 22, color: PB.success }}>0,00 €</span>}/>
             <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 10, background: PB.mentaSoft, fontSize: 12, color: PB.moradoInk, fontWeight: 600 }}>
               1 acceso de tu {compatibleBono.name} · quedan {(compatibleBono.accesos - compatibleBono.usados) - 1} tras esta reserva
             </div>
           </>) : (<>
-            <Line k={`Box · ${b.duration} min`} v={`${b.price},00 €`}/>
-            <Line k="IVA (21%) incluido" v="" muted/>
+            <CheckoutLine k={`Box · ${b.duration} min${b.valle ? ' · hora valle' : ''}`} v={PBU.fmtEUR(b.price)}/>
+            {discount > 0 && <CheckoutLine k={discountLabel} v={`−${PBU.fmtEUR(b.price - finalPrice)}`} green/>}
+            <CheckoutLine k="IVA (21%) incluido" v="" muted/>
             <div style={{ height: 1, background: PB.line, margin: '10px 0' }}/>
-            <Line k={<strong style={{ fontWeight: 800, fontSize: 15 }}>Total</strong>}
-                  v={<span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 22 }}>{b.price},00 €</span>}/>
+            <CheckoutLine k={<strong style={{ fontWeight: 800, fontSize: 15 }}>Total</strong>}
+                  v={<span style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 22 }}>{PBU.fmtEUR(finalPrice)}</span>}/>
           </>)}
         </div>
+
+        {/* Código promocional */}
+        {!usingBono && (
+          <div style={{ margin: '0 16px 12px' }}>
+            {!showPromoInput ? (
+              <button onClick={() => setShowPromoInput(true)} style={{ background: 'transparent', border: 0, padding: '2px 4px', cursor: 'pointer', fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.morado }}>
+                ¿Tienes un código promocional?
+              </button>
+            ) : (
+              <div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    value={promoCode}
+                    onChange={e => { setPromoCode(e.target.value); setPromoState(null); }}
+                    onKeyDown={e => e.key === 'Enter' && applyPromo()}
+                    placeholder="Código (p. ej. POLE10)"
+                    style={{ flex: 1, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${promoState === 'error' ? PB.danger : promoState === 'ok' ? PB.success : PB.line}`, background: PB.surface, fontFamily: PB.mono, fontWeight: 600, fontSize: 13, color: PB.ink, outline: 'none', textTransform: 'uppercase' }}
+                  />
+                  <button onClick={applyPromo} style={{ padding: '0 18px', borderRadius: 12, border: 0, background: PB.ink, color: '#fff', fontFamily: PB.font, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                    Aplicar
+                  </button>
+                </div>
+                {promoState === 'error' && <div style={{ fontSize: 12, color: PB.danger, fontWeight: 600, marginTop: 6 }}>Ese código no existe o ha caducado.</div>}
+                {promoState === 'ok' && <div style={{ fontSize: 12, color: PB.success, fontWeight: 600, marginTop: 6 }}>✓ Código aplicado{firstOff > codeOff ? ' — se mantiene tu descuento de primera sesión, que es mayor' : ''}.</div>}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Método de pago */}
         <div style={{ padding: '4px 20px 4px' }}>
@@ -159,16 +211,23 @@ const ScreenCheckout = ({ booking, onBack, onPay, userBonos }) => {
             </div>
           </div>
           <div style={{ fontFamily: PB.mono, fontWeight: 800, fontSize: 26, color: usingBono ? PB.success : PB.ink }}>
-            {usingBono ? '0,00 €' : `${b.price},00 €`}
+            {usingBono ? '0,00 €' : PBU.fmtEUR(finalPrice)}
           </div>
         </div>
         <Button
-          onClick={() => onPay({ ...b, method: usingBono ? 'bono' : sel.id, methodLabel: usingBono ? `Bono ${compatibleBono?.id}` : sel.label, bonoId: usingBono ? compatibleBono?.id : null })}
+          onClick={() => onPay({
+            ...b,
+            price: usingBono ? b.price : finalPrice,
+            promo: !usingBono && discount > 0 ? { label: discountLabel, off: discount, original: b.price } : null,
+            method: usingBono ? 'bono' : sel.id,
+            methodLabel: usingBono ? `Bono ${compatibleBono?.id}` : sel.label,
+            bonoId: usingBono ? compatibleBono?.id : null,
+          })}
           full style={{ padding: '18px', fontSize: 16 }}
         >
           {usingBono ? <><Icon name="sparkle" size={18} color="#fff"/> Confirmar con bono</> : <>
             {sel.id === 'apple' && <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.2 13.4c0-1.8 1.5-2.7 1.6-2.7-.9-1.3-2.2-1.5-2.7-1.5-1.1-.1-2.2.7-2.8.7s-1.5-.7-2.4-.7c-1.3 0-2.4.7-3 1.9-1.3 2.3-.3 5.6.9 7.5.6.9 1.3 1.9 2.3 1.9s1.3-.6 2.4-.6 1.4.6 2.4.6 1.7-.9 2.3-1.8c.7-1 1-2.1 1-2.1s-2-.7-2-3.2zm-2-5.7c.5-.6.8-1.4.7-2.3-.7 0-1.5.4-2 1-.4.5-.8 1.3-.7 2.1.8 0 1.5-.4 2-.8z"/></svg>}
-            {sel.cta} {b.price},00 €
+            {sel.cta} {PBU.fmtEUR(finalPrice)}
           </>}
         </Button>
       </div>
@@ -176,13 +235,15 @@ const ScreenCheckout = ({ booking, onBack, onPay, userBonos }) => {
   );
 };
 
-const Cell = ({ k, v, mono }) => (
+// Nombres únicos: los scripts Babel comparten el scope global y ProfileSubScreens
+// también declara "Line" — la colisión dejaba el desglose del checkout vacío.
+const CheckoutCell = ({ k, v, mono }) => (
   <div style={{ padding: '10px 12px', borderRadius: 12, background: PB.surface2 }}>
     <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>{k}</div>
     <div style={{ marginTop: 2, fontFamily: mono ? PB.mono : PB.font, fontWeight: 700, fontSize: 15, color: PB.ink }}>{v}</div>
   </div>
 );
-const Line = ({ k, v, muted, strike, green }) => (
+const CheckoutLine = ({ k, v, muted, strike, green }) => (
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', color: muted ? PB.ink3 : PB.ink2, fontSize: 13 }}>
     <span style={{ textDecoration: strike ? 'line-through' : 'none', color: strike ? PB.ink3 : undefined }}>{k}</span>
     <span style={{ fontFamily: PB.mono, fontWeight: 700, color: green ? PB.success : undefined }}>{v}</span>

@@ -1,14 +1,28 @@
-// POLEBOX — Screen 2: Dashboard (logged-in, has a reservation today)
+// POLEBOX — Screen 2: Dashboard (logged-in)
+// El héroe refleja la próxima reserva REAL (antes era una sesión ficticia
+// hardcodeada a las 18:00 que no cambiaba nunca).
 
-const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onReservarConBono, onMisBonos, gameData, onGamificacion, userCurso, onCursos }) => {
-  const [seconds, setSeconds] = React.useState(2 * 3600 + 15 * 60 + 30);
+const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onReservarConBono, onMisBonos, onComprarBono, gameData, onGamificacion, userCurso, onCursos, nextBooking, onMisReservas, notifs, onNotifs }) => {
+  const [now, setNow] = React.useState(() => Date.now());
   React.useEffect(() => {
-    const t = setInterval(() => setSeconds(s => Math.max(0, s - 1)), 1000);
+    const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  const hh = String(Math.floor(seconds / 3600)).padStart(2, '0');
-  const mm = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
-  const ss = String(seconds % 60).padStart(2, '0');
+
+  // Countdown hasta la próxima reserva real
+  const next = React.useMemo(() => {
+    if (!nextBooking) return null;
+    const start = new Date(`${nextBooking.dateISO}T00:00:00`);
+    start.setMinutes(nextBooking.startMin);
+    return { ...nextBooking, startDate: start };
+  }, [nextBooking]);
+  const secsTo = next ? Math.floor((next.startDate.getTime() - now) / 1000) : 0;
+  const inProgress = next && secsTo <= 0 && secsTo > -next.duration * 60;
+  const hh = String(Math.max(0, Math.floor(secsTo / 3600))).padStart(2, '0');
+  const mm = String(Math.max(0, Math.floor((secsTo % 3600) / 60))).padStart(2, '0');
+  const ss = String(Math.max(0, secsTo % 60)).padStart(2, '0');
+
+  const unread = (notifs || []).filter(n => !n.read).length;
 
   const activeBonos = (userBonos || []).filter(b => b.state === 'active');
   const bono = activeBonos[0] || null;
@@ -35,34 +49,61 @@ const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onR
               );
             })()}
           </div>
-          <div style={{ width: 44, height: 44, borderRadius: 999, background: `linear-gradient(135deg, ${PB.menta}, ${PB.mentaDeep})`, border: `2px solid ${PB.morado}`, display: 'grid', placeItems: 'center', color: PB.moradoInk, fontFamily: PB.font, fontWeight: 800, fontSize: 16 }}>
-            LG
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button onClick={onNotifs} aria-label={`Notificaciones${unread ? ` (${unread} sin leer)` : ''}`} style={{ position: 'relative', width: 42, height: 42, borderRadius: 999, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+              <Icon name="bell" size={19} color={PB.ink2}/>
+              {unread > 0 && (
+                <span style={{ position: 'absolute', top: 4, right: 5, minWidth: 15, height: 15, borderRadius: 999, background: PB.danger, color: '#fff', fontSize: 9, fontWeight: 800, display: 'grid', placeItems: 'center', padding: '0 3px' }}>{unread}</span>
+              )}
+            </button>
+            <div style={{ width: 44, height: 44, borderRadius: 999, background: `linear-gradient(135deg, ${PB.menta}, ${PB.mentaDeep})`, border: `2px solid ${PB.morado}`, display: 'grid', placeItems: 'center', color: PB.moradoInk, fontFamily: PB.font, fontWeight: 800, fontSize: 16 }}>
+              LG
+            </div>
           </div>
         </div>
 
-        {/* Hero: today's session */}
-        <div style={{ margin: '4px 16px 16px', borderRadius: 24, padding: 20, position: 'relative',
-          background: `linear-gradient(160deg, #fff 0%, #fff 60%, ${PB.mentaSoft} 140%)`,
-          border: `1px solid ${PB.line}`, boxShadow: '0 18px 40px rgba(72,35,128,.14), 0 2px 6px rgba(20,19,24,.04)',
-          overflow: 'hidden',
-        }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: PB.morado }}/>
-          <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, borderRadius: 999, background: 'rgba(128,227,183,.25)', filter: 'blur(20px)' }}/>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, background: 'rgba(72,35,128,.1)', color: PB.morado }}>
-            <span style={{ width: 6, height: 6, borderRadius: 999, background: PB.morado }}/>
-            <Eyebrow color={PB.morado}>Hoy</Eyebrow>
+        {/* Hero: próxima reserva real (o estado vacío) */}
+        {next ? (
+          <div style={{ margin: '4px 16px 16px', borderRadius: 24, padding: 20, position: 'relative',
+            background: `linear-gradient(160deg, #fff 0%, #fff 60%, ${PB.mentaSoft} 140%)`,
+            border: `1px solid ${PB.line}`, boxShadow: '0 18px 40px rgba(72,35,128,.14), 0 2px 6px rgba(20,19,24,.04)',
+            overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: PB.morado }}/>
+            <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, borderRadius: 999, background: 'rgba(128,227,183,.25)', filter: 'blur(20px)' }}/>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, background: 'rgba(72,35,128,.1)', color: PB.morado }}>
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: PB.morado }}/>
+              <Eyebrow color={PB.morado}>{inProgress ? 'En curso' : next.dayLabel}</Eyebrow>
+            </div>
+            <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 26, letterSpacing: '-0.015em', margin: '10px 0 2px' }}>Sesión en {next.boxLabel.split(' · ')[0]}</h3>
+            <div style={{ color: PB.ink3, fontSize: 14 }}>{next.startStr}h – {next.endStr}h · {next.venueName}</div>
+            {!inProgress && secsTo > 0 && (
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 16 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>Comienza en</span>
+                <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 32, color: PB.morado, letterSpacing: '-0.02em' }}>{hh}:{mm}:{ss}</span>
+              </div>
+            )}
+            {inProgress && (
+              <div style={{ marginTop: 14, padding: '8px 12px', borderRadius: 10, background: PB.successBg, color: PB.success, fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 7, height: 7, borderRadius: 999, background: PB.success }}/> Tu sesión está en curso
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, marginTop: 16, position: 'relative' }}>
+              <Button onClick={onMisReservas} variant="secondary" icon="calendar" style={{ padding: '12px 14px', fontSize: 13, flex: 1 }}>Mis reservas</Button>
+              <Button onClick={onOpenKey} variant="mint" icon="key" style={{ padding: '12px 14px', fontSize: 13, flex: 1 }}>Abrir llave</Button>
+            </div>
           </div>
-          <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 26, letterSpacing: '-0.015em', margin: '10px 0 2px' }}>Sesión en BOX 1</h3>
-          <div style={{ color: PB.ink3, fontSize: 14 }}>18:00h – 19:00h · Industrial</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 16 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>Comienza en</span>
-            <span style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 32, color: PB.morado, letterSpacing: '-0.02em' }}>{hh}:{mm}:{ss}</span>
+        ) : (
+          <div style={{ margin: '4px 16px 16px', borderRadius: 24, padding: '26px 20px', position: 'relative',
+            background: PB.surface, border: `1.5px dashed ${PB.lineStrong}`, textAlign: 'center' }}>
+            <div style={{ width: 52, height: 52, borderRadius: 999, background: PB.surface2, display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
+              <Icon name="calendar" size={24} color={PB.ink4}/>
+            </div>
+            <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, color: PB.ink }}>No tienes sesiones programadas</div>
+            <div style={{ fontSize: 13, color: PB.ink3, marginTop: 4, marginBottom: 14 }}>Tu box te espera — abierto 24/7.</div>
+            <Button onClick={onNewReservation} icon="plus" style={{ padding: '13px 26px', fontSize: 14 }}>Reservar ahora</Button>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 16, position: 'relative' }}>
-            <Button variant="secondary" icon="doc" style={{ padding: '12px 14px', fontSize: 13, flex: 1 }}>Detalles y normativas</Button>
-            <Button onClick={onOpenKey} variant="mint" icon="key" style={{ padding: '12px 14px', fontSize: 13, flex: 1 }}>Abrir llave</Button>
-          </div>
-        </div>
+        )}
 
         {/* Full-width CTA */}
         <div style={{ padding: '0 16px 16px' }}>
@@ -183,6 +224,22 @@ const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onR
           );
         })()}
 
+        {/* Sin bono: CTA al catálogo */}
+        {!bono && (
+          <div onClick={onComprarBono} style={{ margin: '0 16px 16px', padding: '16px 18px', borderRadius: 18, cursor: 'pointer',
+            background: 'linear-gradient(140deg, #3e1478 0%, #1f0844 100%)', color: '#fff',
+            display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 10px 26px rgba(72,35,128,.3)' }}>
+            <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(201,168,255,.2)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <Icon name="sparkle" size={22} color="#c9a8ff"/>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 15 }}>Ahorra hasta un 40% con un bono</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', marginTop: 2 }}>Desde 12 €/sesión · válido en todas las sedes</div>
+            </div>
+            <Icon name="chevron" size={18} color="#c9a8ff"/>
+          </div>
+        )}
+
         {/* Quick-rebook */}
         <div style={{ padding: '0 20px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 18, letterSpacing: '-0.01em', margin: 0 }}>Vuelve a tus favoritos</h3>
@@ -201,7 +258,7 @@ const Screen2Dashboard = ({ onNewReservation, onOpenKey, onStore, userBonos, onR
                 <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 14 }}>{r.n}</div>
                 <div style={{ fontSize: 12, color: PB.ink3 }}>{r.when}</div>
               </div>
-              <button style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: PB.morado, color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+              <button onClick={onNewReservation} aria-label={`Volver a reservar ${r.n}`} style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: PB.morado, color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
                 <Icon name="refresh" size={18} color="#fff"/>
               </button>
             </div>

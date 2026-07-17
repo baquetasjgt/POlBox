@@ -11,6 +11,7 @@ const getLevelFor = (xp) => LEVELS.slice().reverse().find(l => xp >= l.min) || L
 window.LEVELS = LEVELS;
 window.getLevelFor = getLevelFor;
 
+window.BADGES = null; // se asigna tras la declaración
 const BADGES = [
   { id: 'primera-sesion', name: 'Primera sesión',   emoji: '🎯', xp: 50,  desc: 'Completaste tu primera sesión' },
   { id: 'semana-1',       name: 'Racha 1 semana',   emoji: '🔥', xp: 30,  desc: 'Mantuviste 1 semana de racha' },
@@ -29,6 +30,8 @@ const BADGES = [
   { id: 'top-20',         name: 'Top 20',           emoji: '🎪', xp: 500, desc: 'Alcanzaste el top 20 del ranking' },
   { id: 'sesion-libre',   name: 'Primera libre',    emoji: '🎉', xp: 100, desc: 'Ganaste tu primera sesión gratis' },
 ];
+
+window.BADGES = BADGES;
 
 const RANKING = [
   { rank:  1, name: 'Ana Martínez',     initials: 'AM', xp: 4820, levelName: 'Legend' },

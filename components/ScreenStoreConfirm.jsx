@@ -1,12 +1,15 @@
 // POLEBOX — Confirmación de pedido
+// El nº de pedido, código de locker y total vienen del pedido persistido en App
+// (antes se generaban con Math.random al montar y eran irrecuperables al salir).
 
-const ScreenStoreConfirm = ({ onDone, delivery, address, pickup, cart }) => {
-  const orderNum = React.useMemo(() => 'PB-' + Math.random().toString(36).slice(2,7).toUpperCase(), []);
-  const lockerCode = React.useMemo(() => Math.floor(1000 + Math.random() * 9000).toString(), []);
+const ScreenStoreConfirm = ({ onDone, order, delivery, address, pickup, cart }) => {
+  const orderNum = order?.id || 'PB-DEMO';
+  const lockerCode = order?.lockerCode || '····';
 
   const items = Object.entries(cart || {}).filter(([, q]) => q > 0);
   const fmt   = PBU.fmtEUR;
-  const total = PBU.cartTotals(cart, delivery).total;
+  // Total cobrado (no recalculado del carrito vivo)
+  const total = order?.total ?? PBU.cartTotals(cart, delivery).total;
 
   return (
     <>
@@ -62,8 +65,8 @@ const ScreenStoreConfirm = ({ onDone, delivery, address, pickup, cart }) => {
               ))}
             </div>
 
-            <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 12, background: PB.warnBg, color: PB.warn, fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Icon name="bell" size={14} color={PB.warn}/> El código expira en 48 h. Guárdalo en un lugar seguro.
+            <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 12, background: PB.mentaSoft, color: PB.moradoInk, fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon name="bell" size={14} color={PB.morado}/> El código expira en 48 h. Podrás consultarlo en Perfil → Pedidos y en Notificaciones.
             </div>
           </div>
         ) : (

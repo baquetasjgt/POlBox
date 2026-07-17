@@ -167,22 +167,55 @@ const KeySlider = ({ label, unlocked, onUnlock }) => {
   );
 };
 
-const Screen4Key = ({ onBack, userCurso, onCursos }) => {
+const Screen4Key = ({ onBack, userCurso, onCursos, booking, onSessionEnd }) => {
   const [streetUnlocked, setStreetUnlocked] = React.useState(false);
   const [boxUnlocked, setBoxUnlocked] = React.useState(false);
   const [light, setLight] = React.useState('neon');
-  const [remaining, setRemaining] = React.useState(45 * 60 + 20);
+  const [sos, setSos] = React.useState(false);
+  const [now, setNow] = React.useState(() => Date.now());
   React.useEffect(() => {
-    const t = setInterval(() => setRemaining(r => Math.max(0, r - 1)), 1000);
+    const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
-  const ss = String(remaining % 60).padStart(2, '0');
 
-  // progress for circular: 45:20 out of 60:00
-  const total = 60 * 60;
-  const pct = remaining / total;
+  // Con reserva real: cuenta atrás hasta el inicio (antes) o hasta el fin
+  // (en sesión). Sin reserva (salto de demo): sesión ficticia de 60 min.
+  const session = React.useMemo(() => {
+    if (!booking) return null;
+    const start = new Date(`${booking.dateISO}T00:00:00`);
+    start.setMinutes(booking.startMin);
+    const end = new Date(start.getTime() + booking.duration * 60000);
+    return { start, end, totalSec: booking.duration * 60 };
+  }, [booking]);
+
+  const mountRef = React.useRef(Date.now());
+  let mode, remaining, total;
+  if (session) {
+    if (now < session.start.getTime()) {
+      mode = 'antes';
+      remaining = Math.floor((session.start.getTime() - now) / 1000);
+      total = 24 * 3600;
+    } else {
+      mode = 'sesion';
+      remaining = Math.max(0, Math.floor((session.end.getTime() - now) / 1000));
+      total = session.totalSec;
+    }
+  } else {
+    // Salto directo de demo sin reserva: sesión ficticia en curso (45:20 de 60)
+    mode = 'demo';
+    total = 60 * 60;
+    remaining = Math.max(0, 45 * 60 + 20 - Math.floor((now - mountRef.current) / 1000));
+  }
+  const hrs = Math.floor(remaining / 3600);
+  const mm = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
+  const ss = String(remaining % 60).padStart(2, '0');
+  const timeLabel = mode === 'antes' && hrs > 0 ? `${String(hrs).padStart(2, '0')}:${mm}:${ss}` : `${mm}:${ss}`;
+  const pct = Math.max(0, Math.min(1, remaining / total));
   const R = 88, C = 2 * Math.PI * R;
+
+  const boxLabel = booking?.boxLabel || 'BOX 1';
+  const venueLabel = booking?.venueName || 'Madrid · Salamanca';
+  const endLabel = booking?.endStr ? `${booking.endStr}h` : '19:00h';
 
   const lights = [
     { id: 'neon',  label: 'Neón',      color: '#E9A0E3' },
@@ -209,22 +242,35 @@ const Screen4Key = ({ onBack, userCurso, onCursos }) => {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0 8px' }}>
           <svg width="220" height="220" viewBox="0 0 220 220">
             <circle cx="110" cy="110" r={R} fill="none" stroke={PB.surface2} strokeWidth="10"/>
-            <circle cx="110" cy="110" r={R} fill="none" stroke={PB.morado} strokeWidth="10" strokeLinecap="round"
+            <circle cx="110" cy="110" r={R} fill="none" stroke={mode === 'antes' ? PB.mentaDeep : PB.morado} strokeWidth="10" strokeLinecap="round"
               strokeDasharray={C} strokeDashoffset={C * (1 - pct)}
               transform="rotate(-90 110 110)" style={{ transition: 'stroke-dashoffset 600ms' }}/>
-            <text x="110" y="98" textAnchor="middle" fontFamily={PB.font} fontSize="11" fontWeight="700" letterSpacing="2" fill={PB.ink3}>TE QUEDAN</text>
-            <text x="110" y="134" textAnchor="middle" fontFamily={PB.mono} fontSize="40" fontWeight="700" fill={PB.ink}>{mm}:{ss}</text>
+            <text x="110" y="98" textAnchor="middle" fontFamily={PB.font} fontSize="11" fontWeight="700" letterSpacing="2" fill={PB.ink3}>
+              {mode === 'antes' ? 'EMPIEZA EN' : 'TE QUEDAN'}
+            </text>
+            <text x="110" y="134" textAnchor="middle" fontFamily={PB.mono} fontSize={timeLabel.length > 5 ? 32 : 40} fontWeight="700" fill={PB.ink}>{timeLabel}</text>
           </svg>
-          <div style={{ fontSize: 13, color: PB.ink3, marginTop: -6 }}>
-            <strong style={{ color: PB.ink2, fontWeight: 700 }}>BOX 1</strong> · terminando a las 19:00h
+          <div style={{ fontSize: 13, color: PB.ink3, marginTop: -6, textAlign: 'center' }}>
+            <strong style={{ color: PB.ink2, fontWeight: 700 }}>{boxLabel}</strong>
+            {mode === 'antes' ? ` · ${booking?.dayLabel} a las ${booking?.startStr}h` : ` · terminando a las ${endLabel}`}
+            <div style={{ fontSize: 11, color: PB.ink4, marginTop: 2 }}>POLEBOX {venueLabel}</div>
           </div>
         </div>
 
         {/* Sliders */}
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <KeySlider label="Desliza · puerta calle" unlocked={streetUnlocked} onUnlock={() => setStreetUnlocked(true)}/>
-          <KeySlider label="Desliza · puerta BOX 1" unlocked={boxUnlocked} onUnlock={() => setBoxUnlocked(true)}/>
+          <KeySlider label={`Desliza · puerta ${boxLabel.split(' · ')[0]}`} unlocked={boxUnlocked} onUnlock={() => setBoxUnlocked(true)}/>
         </div>
+
+        {/* Terminar sesión → valoración */}
+        {mode !== 'antes' && boxUnlocked && (
+          <div style={{ padding: '0 16px' }}>
+            <Button variant="secondary" full onClick={onSessionEnd} style={{ padding: '13px', fontSize: 14 }}>
+              He terminado · cerrar sesión de box
+            </Button>
+          </div>
+        )}
 
         {/* Ambient lights */}
         <div style={{ padding: '10px 20px 0' }}>
@@ -255,12 +301,46 @@ const Screen4Key = ({ onBack, userCurso, onCursos }) => {
 
         {/* SOS */}
         <div style={{ padding: '18px 16px 8px' }}>
-          <Button variant="danger" full icon="phone" style={{ padding: '14px', fontSize: 14 }}>
+          <Button variant="danger" full icon="phone" onClick={() => setSos(true)} style={{ padding: '14px', fontSize: 14 }}>
             Emergencia · Contactar soporte
           </Button>
         </div>
       </div>
       <TabBar active="home"/>
+
+      {/* Sheet SOS: entrenas sola en una sede sin personal — esto es crítico */}
+      {sos && (
+        <div onClick={() => setSos(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(20,13,62,.55)', zIndex: 120, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', backdropFilter: 'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: PB.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: '12px 20px 28px' }}>
+            <div style={{ width: 44, height: 4, borderRadius: 999, background: PB.line, margin: '4px auto 14px' }}/>
+            <div style={{ textAlign: 'center', marginBottom: 14 }}>
+              <div style={{ width: 54, height: 54, borderRadius: 999, background: PB.dangerBg, display: 'grid', placeItems: 'center', margin: '0 auto 10px' }}>
+                <Icon name="phone" size={24} color={PB.danger}/>
+              </div>
+              <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, margin: '0 0 4px' }}>¿Necesitas ayuda?</h3>
+              <p style={{ fontSize: 12, color: PB.ink3, margin: 0, lineHeight: 1.5 }}>Soporte 24/7 · pueden verte por las cámaras del pasillo y abrir puertas en remoto.</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <a href="tel:112" style={{ textDecoration: 'none' }}>
+                <Button variant="danger" full icon="phone" style={{ padding: '15px', fontSize: 15 }}>
+                  Emergencia médica · llamar 112
+                </Button>
+              </a>
+              <a href="tel:+34910000000" style={{ textDecoration: 'none' }}>
+                <Button variant="secondary" full icon="chat" style={{ padding: '14px', fontSize: 14 }}>
+                  Soporte POLEBOX · 910 000 000
+                </Button>
+              </a>
+              <Button variant="secondary" full icon="unlock" onClick={() => { setStreetUnlocked(true); setBoxUnlocked(true); setSos(false); }} style={{ padding: '14px', fontSize: 14 }}>
+                Apertura remota de puertas (simulada)
+              </Button>
+            </div>
+            <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 12, background: PB.surface2, fontSize: 11, color: PB.ink3, lineHeight: 1.5 }}>
+              Tu contacto de emergencia (María G. · +34 600 111 222) recibirá un aviso si activas el SOS. Configúralo en Perfil → Datos.
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

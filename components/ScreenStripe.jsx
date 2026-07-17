@@ -53,7 +53,7 @@ const ScreenStripe = ({ booking, onBack, onSuccess }) => {
         {/* Resumen */}
         <div style={{ marginBottom: 22 }}>
           <div style={{ fontFamily: 'system-ui', fontSize: 13, color: '#697386' }}>Pagar a POLEBOX</div>
-          <div style={{ fontFamily: 'system-ui', fontWeight: 700, fontSize: 32, color: '#1a1f36', marginTop: 2, letterSpacing: '-0.01em' }}>{b.price},00&nbsp;€</div>
+          <div style={{ fontFamily: 'system-ui', fontWeight: 700, fontSize: 32, color: '#1a1f36', marginTop: 2, letterSpacing: '-0.01em' }}>{PBU.fmtEUR(b.price)}</div>
           <div style={{ fontFamily: 'system-ui', fontSize: 12, color: '#697386', marginTop: 4 }}>{b.label ?? `BOX ${(b.boxIdx ?? 0) + 1} · ${b.duration ?? 90} min · ${b.dayLabel ?? 'Hoy'}`}</div>
         </div>
 
@@ -97,7 +97,7 @@ const ScreenStripe = ({ booking, onBack, onSuccess }) => {
                   Procesando…
                 </>
               ) : (
-                <>Pagar {b.price},00 €</>
+                <>Pagar {PBU.fmtEUR(b.price)}</>
               )}
             </button>
 

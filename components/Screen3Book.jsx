@@ -1,10 +1,33 @@
 // POLEBOX — Screen 3: Calendar / Book (duration-first funnel, anti-gap slots)
 
-const Screen3Book = ({ onBack, onPay, selectedBono, userCurso }) => {
+// RNG determinista por semilla: la disponibilidad varía por sede/día/box pero
+// es estable dentro de la demo (misma sede+día → mismos huecos).
+const pbSeededRand = (seed) => {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return () => {
+    h = Math.imul(h ^ (h >>> 15), 2246822519);
+    h = Math.imul(h ^ (h >>> 13), 3266489917);
+    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+  };
+};
+
+const PB_BOX_NAMES = ['Industrial', 'Neón', 'Sky'];
+const pbBoxLabel = (i) => `BOX ${i + 1} · ${PB_BOX_NAMES[i] || 'Studio'}`;
+
+// Franja valle (antes de las 14:00): −20% en reserva suelta.
+const PB_VALLE_LIMIT = 840;
+const PB_VALLE_OFF = 0.2;
+
+const Screen3Book = ({ onBack, onPay, selectedBono, userCurso, venue }) => {
   const [dayIdx, setDayIdx] = React.useState(0);
   const [boxIdx, setBoxIdx] = React.useState(0);
   const [duration, setDuration] = React.useState(selectedBono?.min ?? 90);
   const [startMin, setStartMin] = React.useState(null);
+  const [weekly, setWeekly] = React.useState(false);
+
+  const nBoxes = venue?.boxes ?? 2;
+  React.useEffect(() => { if (boxIdx >= nBoxes) setBoxIdx(0); }, [nBoxes]);
 
   // 10 días a partir de hoy
   const days = React.useMemo(() => {
@@ -27,17 +50,23 @@ const Screen3Book = ({ onBack, onPay, selectedBono, userCurso }) => {
   const durations = selectedBono ? allDurations.filter(d => d.min === selectedBono.min) : allDurations;
   const current = allDurations.find(d => d.min === duration);
 
-  // Reservas existentes del día (min from 00:00) — por box
-  // Box 0: 10:00–11:00, 12:00–13:30, 17:00–18:00
-  // Box 1: 11:00–12:30, 15:00–16:00, 19:00–20:30
-  const existingByBox = [
-    [ {s: 600,  e: 660}, {s: 720,  e: 810},  {s: 1020, e: 1080} ],
-    [ {s: 660,  e: 750}, {s: 900,  e: 960},  {s: 1140, e: 1230} ],
-  ];
-  const existing = existingByBox[boxIdx];
-
   // Ventana operativa: 10:00 a 23:00
   const OPEN = 600, CLOSE = 1380;
+
+  // Reservas existentes: mock determinista por sede+día+box (antes eran 3
+  // reservas fijas idénticas los 10 días, ignorando sede y día).
+  const existing = React.useMemo(() => {
+    const rnd = pbSeededRand(`${venue?.id || 'v'}-${dayIdx}-${boxIdx}`);
+    const count = 2 + Math.floor(rnd() * 3); // 2-4 reservas
+    const slots = [];
+    for (let i = 0; i < count; i++) {
+      const s = OPEN + Math.floor(rnd() * ((CLOSE - OPEN - 120) / 30)) * 30;
+      const dur = [60, 90, 90, 120][Math.floor(rnd() * 4)];
+      const e = Math.min(s + dur, CLOSE);
+      if (!slots.some(r => !(e <= r.s || s >= r.e))) slots.push({ s, e });
+    }
+    return slots.sort((a, b) => a.s - b.s);
+  }, [venue?.id, dayIdx, boxIdx]);
 
   // ─── Anti-gap slot generator ─────────────────────────────
   // Candidato válido de arranque si:
@@ -72,7 +101,11 @@ const Screen3Book = ({ onBack, onPay, selectedBono, userCurso }) => {
       list.push(s);
     });
     return list;
-  }, [duration, boxIdx]);
+  }, [duration, boxIdx, existing]);
+
+  // Precio por franja: valle (antes de las 14:00) −20% en reserva suelta
+  const isValle = (s) => !selectedBono && s + duration <= PB_VALLE_LIMIT;
+  const slotPrice = (s) => isValle(s) ? Math.round(current.price * (1 - PB_VALLE_OFF)) : current.price;
 
   // Si cambia la duración/box y el slot ya no es válido → reset
   React.useEffect(() => {
@@ -104,10 +137,18 @@ const Screen3Book = ({ onBack, onPay, selectedBono, userCurso }) => {
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 230 }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px 12px' }}>
-          <button onClick={onBack} style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+          <button onClick={onBack} aria-label="Volver" style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
             <Icon name="back" size={18}/>
           </button>
-          <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', margin: 0 }}>Nueva reserva</h3>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ fontFamily: PB.font, fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', margin: 0 }}>Nueva reserva</h3>
+            {venue && (
+              <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 3, padding: '3px 10px', borderRadius: 999, border: `1px solid ${PB.line}`, background: PB.surface, cursor: 'pointer', fontFamily: PB.font, fontWeight: 700, fontSize: 11, color: PB.morado }}>
+                📍 {venue.fullName} · {venue.boxes} boxes
+                <Icon name="chevron" size={11} color={PB.ink4}/>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Banner bono activo */}
@@ -169,7 +210,7 @@ const Screen3Book = ({ onBack, onPay, selectedBono, userCurso }) => {
         <div style={{ padding: '4px 16px 14px' }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 8 }}>2 · Box</div>
           <div style={{ display: 'flex', gap: 6, padding: 4, background: PB.surface2, borderRadius: 14 }}>
-            {['BOX 1 · Industrial', 'BOX 2 · Neón'].map((b, i) => (
+            {Array.from({ length: nBoxes }, (_, i) => pbBoxLabel(i)).map((b, i) => (
               <button key={i} onClick={() => setBoxIdx(i)} style={{
                 flex: 1, padding: '10px 12px', borderRadius: 10, border: 0,
                 background: boxIdx === i ? PB.surface : 'transparent',
@@ -231,22 +272,48 @@ const Screen3Book = ({ onBack, onPay, selectedBono, userCurso }) => {
         <div style={{ padding: '4px 16px 0', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {candidates.map(s => {
             const sel = s === startMin;
+            const valle = isValle(s);
             return (
               <button key={s} onClick={() => setStartMin(s)} style={{
-                padding: '14px 0', borderRadius: 12,
+                padding: '10px 0 8px', borderRadius: 12,
                 border: `1px solid ${sel ? PB.morado : 'transparent'}`,
                 background: sel ? PB.morado : PB.surface,
                 color: sel ? '#fff' : PB.ink,
                 fontFamily: PB.mono, fontWeight: 700, fontSize: 15,
                 cursor: 'pointer',
-                boxShadow: sel ? '0 4px 14px rgba(72,35,128,.3)' : `inset 0 0 0 1px ${PB.line}`,
-              }}>{fmt(s)}</button>
+                boxShadow: sel ? '0 4px 14px rgba(72,35,128,.3)' : `inset 0 0 0 1px ${valle ? PB.mentaDeep : PB.line}`,
+              }}>
+                {fmt(s)}
+                {!selectedBono && (
+                  <div style={{ fontSize: 10, fontWeight: 700, marginTop: 2, color: sel ? 'rgba(255,255,255,.75)' : (valle ? PB.success : PB.ink4), fontFamily: PB.font }}>
+                    {slotPrice(s)} €{valle ? ' · valle' : ''}
+                  </div>
+                )}
+              </button>
             );
           })}
         </div>
         <div style={{ padding: '10px 18px 0', fontSize: 11, color: PB.ink4, display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icon name="bolt" size={12}/> Solo mostramos horas que no dejan huecos muertos en el box.
         </div>
+        {!selectedBono && (
+          <div style={{ padding: '4px 18px 0', fontSize: 11, color: PB.success, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+            <Icon name="sparkle" size={12} color={PB.success}/> Horas valle (antes de las 14:00): −20% sobre la tarifa.
+          </div>
+        )}
+
+        {/* Repetir cada semana */}
+        {startMin != null && (
+          <button onClick={() => setWeekly(w => !w)} style={{ margin: '14px 16px 0', width: 'calc(100% - 32px)', display: 'flex', alignItems: 'center', gap: 10, background: weekly ? 'rgba(72,35,128,.05)' : PB.surface, border: `1.5px solid ${weekly ? PB.morado : PB.line}`, borderRadius: 14, padding: '12px 14px', cursor: 'pointer', textAlign: 'left' }}>
+            <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${weekly ? PB.morado : PB.lineStrong}`, background: weekly ? PB.morado : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              {weekly && <Icon name="check" size={13} color="#fff"/>}
+            </div>
+            <div>
+              <div style={{ fontFamily: PB.font, fontWeight: 700, fontSize: 13, color: PB.ink }}>🔁 Repetir cada semana</div>
+              <div style={{ fontSize: 11, color: PB.ink3, marginTop: 1 }}>Tu hueco de los {days[dayIdx].isToday ? 'hoy' : days[dayIdx].d.toLowerCase()} queda bloqueado las próximas 4 semanas (se cobra por sesión).</div>
+            </div>
+          </button>
+        )}
       </div>
 
       {/* Sticky payment sheet */}
@@ -274,17 +341,25 @@ const Screen3Book = ({ onBack, onPay, selectedBono, userCurso }) => {
               {days[dayIdx].isToday ? 'Hoy' : days[dayIdx].d} {days[dayIdx].n} · {startMin != null ? `${fmt(startMin)} – ${fmt(endMin)}h` : '— selecciona hora'}
             </div>
           </div>
-          <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 22, color: PB.ink }}>{current.price},00&nbsp;€</div>
+          <div style={{ fontFamily: PB.mono, fontWeight: 700, fontSize: 22, color: PB.ink }}>
+            {startMin != null && isValle(startMin) && <span style={{ fontSize: 13, color: PB.ink4, textDecoration: 'line-through', marginRight: 6 }}>{current.price},00</span>}
+            {PBU.fmtEUR(startMin != null ? slotPrice(startMin) : current.price)}
+          </div>
         </div>
-        <Button onClick={startMin != null ? () => onPay({
-          dayLabel: (days[dayIdx].isToday ? 'Hoy' : days[dayIdx].d) + ' ' + days[dayIdx].n,
-          startMin, endMin, duration, boxIdx, price: current.price,
-          startStr: fmt(startMin), endStr: fmt(endMin),
-        }) : undefined} full icon="arrow" style={{
-          padding: '18px', fontSize: 16,
-          opacity: startMin != null ? 1 : .45,
-          cursor: startMin != null ? 'pointer' : 'not-allowed',
-        }}>
+        <Button
+          disabled={startMin == null}
+          hint="Selecciona una hora para continuar"
+          onClick={() => onPay({
+            dayLabel: (days[dayIdx].isToday ? 'Hoy' : days[dayIdx].d) + ' ' + days[dayIdx].n,
+            dayIdx,
+            venueId: venue?.id, venueName: venue?.fullName,
+            startMin, endMin, duration, boxIdx, boxLabel: pbBoxLabel(boxIdx),
+            price: slotPrice(startMin ?? 0),
+            basePrice: current.price,
+            valle: startMin != null && isValle(startMin),
+            weekly,
+            startStr: fmt(startMin ?? 0), endStr: fmt(endMin ?? 0),
+          })} full icon="arrow" style={{ padding: '18px', fontSize: 16 }}>
           Reservar ahora
         </Button>
       </div>

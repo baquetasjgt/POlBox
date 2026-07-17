@@ -1,6 +1,40 @@
 // POLEBOX — Añadir método de pago
 // Formulario tipo Stripe con preview de tarjeta en vivo + detección de marca.
 
+// Extraído a nivel de módulo: definido dentro del render, React lo remontaba
+// en cada pulsación y el input perdía el foco al teclear.
+const PayField = ({ label, value, onChange, placeholder, type = 'text', mode, maxLength, valid, onFocus, onBlur, mono = false, autoComplete }) => {
+  const showState = value.length > 0;
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>{label}</span>
+      <div style={{ position: 'relative' }}>
+        <input
+          type={type} inputMode={mode} value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus} onBlur={onBlur}
+          placeholder={placeholder} maxLength={maxLength}
+          autoComplete={autoComplete}
+          style={{
+            width: '100%', boxSizing: 'border-box', padding: '14px 38px 14px 14px',
+            borderRadius: 12, border: `1px solid ${showState ? (valid ? PB.success : PB.lineStrong) : PB.line}`,
+            background: PB.surface, fontFamily: mono ? PB.mono : PB.font, fontWeight: mono ? 600 : 500,
+            fontSize: 15, color: PB.ink, outline: 'none',
+            transition: 'border-color 220ms',
+          }}
+          onFocusCapture={(e) => e.currentTarget.style.borderColor = PB.morado}
+          onBlurCapture={(e) => e.currentTarget.style.borderColor = showState ? (valid ? PB.success : PB.lineStrong) : PB.line}
+        />
+        {showState && valid && (
+          <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: PB.success }}>
+            <Icon name="check" size={18} color={PB.success}/>
+          </div>
+        )}
+      </div>
+    </label>
+  );
+};
+
 const ScreenAddPayment = ({ onBack, onSaved }) => {
   const [num, setNum] = React.useState('');
   const [name, setName] = React.useState('');
@@ -104,39 +138,6 @@ const ScreenAddPayment = ({ onBack, onSaved }) => {
     return <div style={{ display: 'flex', gap: 3 }}><div style={{ width: big ? 22 : 14, height: big ? 22 : 14, borderRadius: 999, background: 'rgba(255,255,255,.15)' }}/><div style={{ width: big ? 22 : 14, height: big ? 22 : 14, borderRadius: 999, background: 'rgba(255,255,255,.1)' }}/></div>;
   };
 
-  // ─── Input atom ─────────────────────────────────────────
-  const Field = ({ label, value, onChange, placeholder, type = 'text', mode, maxLength, valid, onFocus, onBlur, mono = false, autoComplete }) => {
-    const showState = value.length > 0;
-    return (
-      <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3 }}>{label}</span>
-        <div style={{ position: 'relative' }}>
-          <input
-            type={type} inputMode={mode} value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onFocus={onFocus} onBlur={onBlur}
-            placeholder={placeholder} maxLength={maxLength}
-            autoComplete={autoComplete}
-            style={{
-              width: '100%', boxSizing: 'border-box', padding: '14px 38px 14px 14px',
-              borderRadius: 12, border: `1px solid ${showState ? (valid ? PB.success : PB.lineStrong) : PB.line}`,
-              background: PB.surface, fontFamily: mono ? PB.mono : PB.font, fontWeight: mono ? 600 : 500,
-              fontSize: 15, color: PB.ink, outline: 'none',
-              transition: 'border-color 220ms',
-            }}
-            onFocusCapture={(e) => e.currentTarget.style.borderColor = PB.morado}
-            onBlurCapture={(e) => e.currentTarget.style.borderColor = showState ? (valid ? PB.success : PB.lineStrong) : PB.line}
-          />
-          {showState && valid && (
-            <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: PB.success }}>
-              <Icon name="check" size={18} color={PB.success}/>
-            </div>
-          )}
-        </div>
-      </label>
-    );
-  };
-
   // ─── Card preview ───────────────────────────────────────
   const cardBg = brand === 'visa' ? 'linear-gradient(135deg, #1A1F71, #2c2d8e)'
               : brand === 'amex' ? 'linear-gradient(135deg, #006FCF, #00457C)'
@@ -238,7 +239,7 @@ const ScreenAddPayment = ({ onBack, onSaved }) => {
 
         {/* Form */}
         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <Field
+          <PayField
             label="Número de tarjeta"
             value={num}
             onChange={(v) => setNum(formatNum(v))}
@@ -247,7 +248,7 @@ const ScreenAddPayment = ({ onBack, onSaved }) => {
             valid={numOk}
             autoComplete="cc-number"
           />
-          <Field
+          <PayField
             label="Titular de la tarjeta"
             value={name}
             onChange={setName}
@@ -256,7 +257,7 @@ const ScreenAddPayment = ({ onBack, onSaved }) => {
             autoComplete="cc-name"
           />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <Field
+            <PayField
               label="Caducidad"
               value={exp}
               onChange={(v) => setExp(formatExp(v))}
@@ -265,7 +266,7 @@ const ScreenAddPayment = ({ onBack, onSaved }) => {
               valid={expOk}
               autoComplete="cc-exp"
             />
-            <Field
+            <PayField
               label="CVC"
               value={cvc}
               onChange={(v) => setCvc(v.replace(/\D/g, '').slice(0, 4))}

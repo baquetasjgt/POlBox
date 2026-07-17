@@ -1,5 +1,27 @@
 // POLEBOX — Dirección de envío a domicilio
 
+// Extraído a nivel de módulo: definido dentro del render, React creaba un tipo
+// nuevo por pulsación y el input se remontaba perdiendo el foco al teclear.
+const AddressField = ({ label, value, onChange, type = 'text', placeholder }) => (
+  <div style={{ marginBottom: 12 }}>
+    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 6 }}>{label}</label>
+    <input
+      type={type}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      style={{
+        width: '100%', boxSizing: 'border-box',
+        padding: '13px 14px', borderRadius: 12, border: `1px solid ${PB.line}`,
+        background: PB.surface2, fontFamily: PB.font, fontSize: 14, color: PB.ink,
+        outline: 'none', transition: 'border-color 180ms',
+      }}
+      onFocus={e => e.target.style.borderColor = PB.morado}
+      onBlur={e => e.target.style.borderColor = PB.line}
+    />
+  </div>
+);
+
 const ScreenStoreAddress = ({ onBack, onConfirm }) => {
   const [form, setForm] = React.useState({
     nombre: 'Laura Gómez',
@@ -11,26 +33,6 @@ const ScreenStoreAddress = ({ onBack, onConfirm }) => {
     guardar: true,
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-
-  const Field = ({ label, k, type = 'text', placeholder }) => (
-    <div style={{ marginBottom: 12 }}>
-      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 6 }}>{label}</label>
-      <input
-        type={type}
-        value={form[k]}
-        onChange={e => set(k, e.target.value)}
-        placeholder={placeholder}
-        style={{
-          width: '100%', boxSizing: 'border-box',
-          padding: '13px 14px', borderRadius: 12, border: `1px solid ${PB.line}`,
-          background: PB.surface2, fontFamily: PB.font, fontSize: 14, color: PB.ink,
-          outline: 'none', transition: 'border-color 180ms',
-        }}
-        onFocus={e => e.target.style.borderColor = PB.morado}
-        onBlur={e => e.target.style.borderColor = PB.line}
-      />
-    </div>
-  );
 
   const valid = form.nombre && form.telefono && form.calle && form.ciudad && form.cp;
 
@@ -56,9 +58,9 @@ const ScreenStoreAddress = ({ onBack, onConfirm }) => {
         </div>
 
         <div style={{ padding: '0 16px' }}>
-          <Field label="Nombre completo" k="nombre" placeholder="Tu nombre"/>
-          <Field label="Teléfono" k="telefono" type="tel" placeholder="+34 600 000 000"/>
-          <Field label="Calle y número" k="calle" placeholder="C/ Mayor 1, 2ºA"/>
+          <AddressField label="Nombre completo" value={form.nombre} onChange={v => set('nombre', v)} placeholder="Tu nombre"/>
+          <AddressField label="Teléfono" value={form.telefono} onChange={v => set('telefono', v)} type="tel" placeholder="+34 600 000 000"/>
+          <AddressField label="Calle y número" value={form.calle} onChange={v => set('calle', v)} placeholder="C/ Mayor 1, 2ºA"/>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
             <div>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 6 }}>Ciudad</label>
@@ -69,7 +71,7 @@ const ScreenStoreAddress = ({ onBack, onConfirm }) => {
               <input value={form.cp} onChange={e => set('cp', e.target.value)} maxLength={5} style={{ width: '100%', boxSizing: 'border-box', padding: '13px 14px', borderRadius: 12, border: `1px solid ${PB.line}`, background: PB.surface2, fontFamily: PB.font, fontSize: 14, color: PB.ink, outline: 'none' }}/>
             </div>
           </div>
-          <Field label="Provincia" k="provincia" placeholder="Provincia"/>
+          <AddressField label="Provincia" value={form.provincia} onChange={v => set('provincia', v)} placeholder="Provincia"/>
 
           {/* Guardar */}
           <button onClick={() => set('guardar', !form.guardar)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 0, padding: '12px 0', cursor: 'pointer', width: '100%' }}>

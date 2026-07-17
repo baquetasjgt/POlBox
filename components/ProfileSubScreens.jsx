@@ -1009,15 +1009,6 @@ const ScreenAddresses = ({ onBack }) => {
     setTimeout(() => closeModal(), 2300);
   };
 
-  const FInput = ({ label, value, onChange, placeholder }) => (
-    <div className="pb-ef" style={{ padding: '10px 20px 0' }}>
-      <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 5, transition: 'color 150ms', pointerEvents: 'none' }}>{label}</label>
-      <input value={value} onChange={onChange} placeholder={placeholder || ''}
-        style={{ width: '100%', border: 0, borderBottom: `1.5px solid ${PB.line}`, outline: 0, padding: '2px 0 10px', background: 'transparent', fontFamily: PB.font, fontWeight: 600, fontSize: 15, color: PB.ink, boxSizing: 'border-box', transition: 'border-color 150ms' }}
-      />
-    </div>
-  );
-
   return (
     <>
       <style>{`
@@ -1154,6 +1145,35 @@ const ScreenAddresses = ({ onBack }) => {
   );
 };
 
+// Campos de formulario extraídos a nivel de módulo: definidos dentro del
+// render, React los remontaba en cada pulsación y el input perdía el foco.
+const FInput = ({ label, value, onChange, placeholder }) => (
+  <div className="pb-ef" style={{ padding: '10px 20px 0' }}>
+    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 5, transition: 'color 150ms', pointerEvents: 'none' }}>{label}</label>
+    <input value={value} onChange={onChange} placeholder={placeholder || ''}
+      style={{ width: '100%', border: 0, borderBottom: `1.5px solid ${PB.line}`, outline: 0, padding: '2px 0 10px', background: 'transparent', fontFamily: PB.font, fontWeight: 600, fontSize: 15, color: PB.ink, boxSizing: 'border-box', transition: 'border-color 150ms' }}
+    />
+  </div>
+);
+const EditField = ({ label, value, onChange, type = 'text', badge }) => (
+  <div className="pb-ef" style={{ padding: '10px 16px 0', borderTop: `1px solid ${PB.line}` }}>
+    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 5, transition: 'color 150ms', pointerEvents: 'none' }}>{label}</label>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10 }}>
+      <input
+        type={type} value={value} onChange={onChange}
+        style={{
+          flex: 1, border: 0, borderBottom: `1.5px solid ${PB.line}`, outline: 0,
+          padding: '2px 0 8px', background: 'transparent',
+          fontFamily: PB.font, fontWeight: 600, fontSize: 15, color: PB.ink,
+          letterSpacing: type === 'password' && value ? '.15em' : 0,
+          transition: 'border-color 150ms',
+        }}
+      />
+      {badge}
+    </div>
+  </div>
+);
+
 // ─── Editar perfil / gestión de cuenta ───────────────────────
 const ScreenEditProfile = ({ onBack }) => {
   const [saving, setSaving]       = React.useState(false);
@@ -1193,25 +1213,6 @@ const ScreenEditProfile = ({ onBack }) => {
       color: [PB.danger, PB.warn, PB.morado, PB.success][score],
     };
   })();
-
-  const Field = ({ label, value, onChange, type = 'text', badge }) => (
-    <div className="pb-ef" style={{ padding: '10px 16px 0', borderTop: `1px solid ${PB.line}` }}>
-      <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: PB.ink3, marginBottom: 5, transition: 'color 150ms', pointerEvents: 'none' }}>{label}</label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10 }}>
-        <input
-          type={type} value={value} onChange={onChange}
-          style={{
-            flex: 1, border: 0, borderBottom: `1.5px solid ${PB.line}`, outline: 0,
-            padding: '2px 0 8px', background: 'transparent',
-            fontFamily: PB.font, fontWeight: 600, fontSize: 15, color: PB.ink,
-            letterSpacing: type === 'password' && value ? '.15em' : 0,
-            transition: 'border-color 150ms',
-          }}
-        />
-        {badge}
-      </div>
-    </div>
-  );
 
   const SectionLabel = ({ title }) => (
     <div style={{ padding: '0 4px 8px', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: PB.ink3 }}>{title}</div>
@@ -1293,9 +1294,9 @@ const ScreenEditProfile = ({ onBack }) => {
         <div style={{ margin: '0 16px' }}>
           <SectionLabel title="Datos personales"/>
           <Card>
-            <Field label="Nombre"    value={form.nombre}    onChange={set('nombre')}/>
-            <Field label="Apellidos" value={form.apellidos} onChange={set('apellidos')}/>
-            <Field label="Teléfono"  value={form.telefono}  onChange={set('telefono')} type="tel"/>
+            <EditField label="Nombre"    value={form.nombre}    onChange={set('nombre')}/>
+            <EditField label="Apellidos" value={form.apellidos} onChange={set('apellidos')}/>
+            <EditField label="Teléfono"  value={form.telefono}  onChange={set('telefono')} type="tel"/>
           </Card>
         </div>
 
@@ -1303,7 +1304,7 @@ const ScreenEditProfile = ({ onBack }) => {
         <div style={{ margin: '16px 16px 0' }}>
           <SectionLabel title="Acceso"/>
           <Card>
-            <Field
+            <EditField
               label="Correo electrónico" value={form.email} onChange={set('email')} type="email"
               badge={
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 999, background: PB.successBg, color: PB.success, fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
@@ -1327,8 +1328,8 @@ const ScreenEditProfile = ({ onBack }) => {
             </div>
             {/* Formulario de contraseña */}
             {showPwd && (<>
-              <Field label="Contraseña actual"  value={form.pwdActual}  onChange={set('pwdActual')}  type="password"/>
-              <Field label="Nueva contraseña"   value={form.pwdNueva}   onChange={set('pwdNueva')}   type="password"/>
+              <EditField label="Contraseña actual"  value={form.pwdActual}  onChange={set('pwdActual')}  type="password"/>
+              <EditField label="Nueva contraseña"   value={form.pwdNueva}   onChange={set('pwdNueva')}   type="password"/>
               {pwdStrength && (
                 <div style={{ padding: '0 16px 12px' }}>
                   <div style={{ display: 'flex', gap: 4, marginBottom: 5 }}>
@@ -1339,7 +1340,7 @@ const ScreenEditProfile = ({ onBack }) => {
                   <span style={{ fontSize: 11, fontWeight: 700, color: pwdStrength.color }}>{pwdStrength.label}</span>
                 </div>
               )}
-              <Field
+              <EditField
                 label="Confirmar nueva contraseña" value={form.pwdConfirm} onChange={set('pwdConfirm')} type="password"
                 badge={form.pwdConfirm && form.pwdNueva && (
                   form.pwdConfirm === form.pwdNueva

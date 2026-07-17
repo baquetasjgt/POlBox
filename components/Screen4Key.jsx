@@ -101,6 +101,72 @@ const CourseSection = ({ userCurso, onCursos }) => {
   );
 };
 
+// Extraído a nivel de módulo: antes vivía dentro de Screen4Key, cuyo countdown
+// re-renderiza cada segundo — React remontaba el slider en cada tick y el
+// arrastre se reseteaba a mitad de gesto. Accesible también por teclado.
+const KeySlider = ({ label, unlocked, onUnlock }) => {
+  const [dx, setDx] = React.useState(0);
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  const startRef = React.useRef(0);
+  const onStart = (clientX) => {
+    if (unlocked) return;
+    setDragging(true); startRef.current = clientX - dx;
+  };
+  const onMove = (clientX) => {
+    if (!dragging) return;
+    const w = trackRef.current?.offsetWidth || 300;
+    const max = w - 62;
+    const nx = Math.max(0, Math.min(max, clientX - startRef.current));
+    setDx(nx);
+    if (nx >= max - 4) { onUnlock(); setDragging(false); }
+  };
+  const onEnd = () => { if (dragging && dx < (trackRef.current?.offsetWidth || 300) - 66) setDx(0); setDragging(false); };
+  const onKey = (e) => {
+    if (unlocked) return;
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onUnlock(); }
+  };
+  return (
+    <div
+      ref={trackRef}
+      role="button"
+      tabIndex={unlocked ? -1 : 0}
+      aria-label={unlocked ? 'Puerta abierta' : `${label} (o pulsa Enter para abrir)`}
+      onKeyDown={onKey}
+      onMouseDown={(e) => onStart(e.clientX)}
+      onMouseMove={(e) => onMove(e.clientX)}
+      onMouseUp={onEnd}
+      onMouseLeave={onEnd}
+      onTouchStart={(e) => onStart(e.touches[0].clientX)}
+      onTouchMove={(e) => onMove(e.touches[0].clientX)}
+      onTouchEnd={onEnd}
+      style={{
+        position: 'relative', height: 62, borderRadius: 999,
+        background: unlocked ? PB.successBg : PB.surface,
+        border: `1px solid ${unlocked ? PB.success : PB.line}`,
+        overflow: 'hidden', userSelect: 'none', touchAction: 'none',
+      }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: PB.font, fontWeight: 700, fontSize: 13, letterSpacing: '.1em', textTransform: 'uppercase',
+        color: unlocked ? PB.success : PB.ink3, pointerEvents: 'none',
+      }}>
+        {unlocked ? <><Icon name="check" size={18}/>&nbsp; Puerta abierta</> : label}
+      </div>
+      {/* Knob */}
+      {!unlocked && (
+        <div style={{
+          position: 'absolute', top: 5, left: 5 + dx, width: 52, height: 52, borderRadius: 999,
+          background: PB.morado, display: 'grid', placeItems: 'center', color: '#fff',
+          boxShadow: '0 6px 16px rgba(72,35,128,.35)', cursor: 'grab',
+          transition: dragging ? 'none' : 'left 220ms cubic-bezier(.2,.7,.2,1)',
+        }}>
+          <Icon name="arrow" size={20} color="#fff"/>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Screen4Key = ({ onBack, userCurso, onCursos }) => {
   const [streetUnlocked, setStreetUnlocked] = React.useState(false);
   const [boxUnlocked, setBoxUnlocked] = React.useState(false);
@@ -117,61 +183,6 @@ const Screen4Key = ({ onBack, userCurso, onCursos }) => {
   const total = 60 * 60;
   const pct = remaining / total;
   const R = 88, C = 2 * Math.PI * R;
-
-  const Slider = ({ label, unlocked, onUnlock }) => {
-    const [dx, setDx] = React.useState(0);
-    const trackRef = React.useRef(null);
-    const [dragging, setDragging] = React.useState(false);
-    const startRef = React.useRef(0);
-    const onStart = (clientX) => {
-      if (unlocked) return;
-      setDragging(true); startRef.current = clientX - dx;
-    };
-    const onMove = (clientX) => {
-      if (!dragging) return;
-      const w = trackRef.current?.offsetWidth || 300;
-      const max = w - 62;
-      const nx = Math.max(0, Math.min(max, clientX - startRef.current));
-      setDx(nx);
-      if (nx >= max - 4) { onUnlock(); setDragging(false); }
-    };
-    const onEnd = () => { if (dragging && dx < (trackRef.current?.offsetWidth || 300) - 66) setDx(0); setDragging(false); };
-    return (
-      <div
-        ref={trackRef}
-        onMouseDown={(e) => onStart(e.clientX)}
-        onMouseMove={(e) => onMove(e.clientX)}
-        onMouseUp={onEnd}
-        onMouseLeave={onEnd}
-        onTouchStart={(e) => onStart(e.touches[0].clientX)}
-        onTouchMove={(e) => onMove(e.touches[0].clientX)}
-        onTouchEnd={onEnd}
-        style={{
-          position: 'relative', height: 62, borderRadius: 999,
-          background: unlocked ? PB.successBg : PB.surface,
-          border: `1px solid ${unlocked ? PB.success : PB.line}`,
-          overflow: 'hidden', userSelect: 'none', touchAction: 'none',
-        }}>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: PB.font, fontWeight: 700, fontSize: 13, letterSpacing: '.1em', textTransform: 'uppercase',
-          color: unlocked ? PB.success : PB.ink3, pointerEvents: 'none',
-        }}>
-          {unlocked ? <><Icon name="check" size={18}/>&nbsp; Puerta abierta</> : label}
-        </div>
-        {/* Knob */}
-        {!unlocked && (
-          <div style={{
-            position: 'absolute', top: 5, left: 5 + dx, width: 52, height: 52, borderRadius: 999,
-            background: PB.morado, display: 'grid', placeItems: 'center', color: '#fff',
-            boxShadow: '0 6px 16px rgba(72,35,128,.35)', cursor: 'grab',
-            transition: dragging ? 'none' : 'left 220ms cubic-bezier(.2,.7,.2,1)',
-          }}>
-            <Icon name="arrow" size={20} color="#fff"/>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const lights = [
     { id: 'neon',  label: 'Neón',      color: '#E9A0E3' },
@@ -211,8 +222,8 @@ const Screen4Key = ({ onBack, userCurso, onCursos }) => {
 
         {/* Sliders */}
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Slider label="Desliza · puerta calle" unlocked={streetUnlocked} onUnlock={() => setStreetUnlocked(true)}/>
-          <Slider label="Desliza · puerta BOX 1" unlocked={boxUnlocked} onUnlock={() => setBoxUnlocked(true)}/>
+          <KeySlider label="Desliza · puerta calle" unlocked={streetUnlocked} onUnlock={() => setStreetUnlocked(true)}/>
+          <KeySlider label="Desliza · puerta BOX 1" unlocked={boxUnlocked} onUnlock={() => setBoxUnlocked(true)}/>
         </div>
 
         {/* Ambient lights */}
